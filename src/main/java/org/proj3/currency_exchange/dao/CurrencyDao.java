@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class CurrencyDao {
     private static final CurrencyDao instance = new CurrencyDao();
@@ -44,6 +45,28 @@ public class CurrencyDao {
             throw new DaoException("Error while fetching currencies", e);
         }
         return currencies;
+    }
+
+    public Optional<CurrencyEntity> findByCode(String code) {
+        Optional<CurrencyEntity> currency = Optional.empty();
+        String sql = """
+                SELECT id, code, full_name, sign
+                FROM currencies WHERE code = ?
+                """;
+
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, code);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                currency = Optional.of(mapRowToEntity(resultSet));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return currency;
     }
 
     public CurrencyEntity save(CurrencyEntity currency) {
