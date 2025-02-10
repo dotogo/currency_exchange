@@ -39,10 +39,10 @@ public class CurrencyService {
         return dto;
     }
 
-    public CurrencyEntity save(CurrencyRequestDto currencyRequestDto) {
-        CurrencyEntity entity = CurrencyMapper.getInstance().toEntity(currencyRequestDto);
-        return currencyDao.save(entity);
-    }
+//    public CurrencyEntity save(CurrencyRequestDto currencyRequestDto) {
+//        CurrencyEntity entity = CurrencyMapper.getInstance().toEntity(currencyRequestDto);
+//        return currencyDao.save(entity);
+//    }
 
     public static CurrencyService getInstance() {
         return currencyService;
