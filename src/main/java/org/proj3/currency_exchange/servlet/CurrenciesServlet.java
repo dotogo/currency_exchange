@@ -10,7 +10,9 @@ import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.service.CurrencyService;
 
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet("/currencies")
 public class CurrenciesServlet extends HttpServlet {
@@ -32,5 +34,16 @@ public class CurrenciesServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write("{\"error\": \"Internal server error\"}");
         }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Map<String, String[]> parameterMap = req.getParameterMap();
+
+        if (!parameterMap.containsKey("name") || !parameterMap.containsKey("code") || !parameterMap.containsKey("sign")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("A required form field is missing.");
+        }
+        System.out.println();
     }
 }

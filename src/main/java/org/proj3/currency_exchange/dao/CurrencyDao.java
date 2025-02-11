@@ -14,10 +14,10 @@ public class CurrencyDao {
     private static final CurrencyDao instance = new CurrencyDao();
     private static final DataSource dataSource = DatabaseConfig.getDataSource();
 
-//    private static final String SAVE_SQL = """
-//            INSERT INTO currencies (code, full_name, sign)
-//            VALUES (?, ?, ?)
-//            """;
+    private static final String SAVE_SQL = """
+            INSERT INTO currencies (code, full_name, sign)
+            VALUES (?, ?, ?)
+            """;
 
     private CurrencyDao() {
     }
@@ -69,27 +69,27 @@ public class CurrencyDao {
         return currency;
     }
 
-//    public CurrencyEntity save(CurrencyEntity currency) {
-//        try (Connection connection = dataSource.getConnection();
-//             PreparedStatement preparedStatement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS)) {
-//
-//            preparedStatement.setString(1, currency.getCode());
-//            preparedStatement.setString(2, currency.getFullName());
-//            preparedStatement.setString(3, currency.getSign());
-//
-//            preparedStatement.executeUpdate();
-//
-//            ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
-//            if (generatedKeys.next()) {
-//                int generatedId = generatedKeys.getInt("id");
-//                currency.setId(generatedId);
-//            }
-//            return currency;
-//
-//        } catch (SQLException e) {
-//            throw new DaoException("Error saving currency", e);
-//        }
-//    }
+    public CurrencyEntity save(CurrencyEntity currency) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS)) {
+
+            preparedStatement.setString(1, currency.getCode());
+            preparedStatement.setString(2, currency.getFullName());
+            preparedStatement.setString(3, currency.getSign());
+
+            preparedStatement.executeUpdate();
+
+            ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                int generatedId = generatedKeys.getInt("id");
+                currency.setId(generatedId);
+            }
+            return currency;
+
+        } catch (SQLException e) {
+            throw new DaoException("Error saving currency", e);
+        }
+    }
 
     private CurrencyEntity mapRowToEntity(ResultSet resultSet) throws SQLException {
         CurrencyEntity currency = new CurrencyEntity(
