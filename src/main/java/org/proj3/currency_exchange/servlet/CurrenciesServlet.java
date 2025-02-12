@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @WebServlet("/currencies")
 public class CurrenciesServlet extends HttpServlet {
@@ -43,6 +44,28 @@ public class CurrenciesServlet extends HttpServlet {
         if (!parameterMap.containsKey("name") || !parameterMap.containsKey("code") || !parameterMap.containsKey("sign")) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write("A required form field is missing.");
+            return;
+        }
+
+        String currencyCode = parameterMap.get("code")[0];
+        try {
+            Optional<CurrencyResponseDto> currencyResponseDto = currencyService.findByCode(currencyCode);
+            if(currencyResponseDto.isPresent()) {
+                resp.setStatus(HttpServletResponse.SC_CONFLICT);
+                resp.getWriter().write("A currency with this code already exists.");
+                return;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        String[] codes = parameterMap.get("code");
+        int length = codes.length;
+        System.out.println("codes length " + length);
+
+        if (length == 1) {
+            System.out.println("codes length 1.  " + codes[0]);
         }
         System.out.println();
     }
