@@ -16,7 +16,7 @@ public class CurrencyMapper {
 
     public CurrencyEntity toEntity(CurrencyRequestDto currencyRequestDto) {
         String code = currencyRequestDto.getCode();
-        String fullName = currencyRequestDto.getFullName();
+        String fullName = currencyRequestDto.getName();
         String sign = currencyRequestDto.getSign();
         return new CurrencyEntity(code, fullName, sign);
 

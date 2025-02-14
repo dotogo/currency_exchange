@@ -77,9 +77,12 @@ public class CurrencyDao {
             preparedStatement.setString(2, currency.getFullName());
             preparedStatement.setString(3, currency.getSign());
 
+            System.out.println();
+
             preparedStatement.executeUpdate();
 
             ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+            System.out.println(generatedKeys);
             if (generatedKeys.next()) {
                 int generatedId = generatedKeys.getInt("id");
                 currency.setId(generatedId);

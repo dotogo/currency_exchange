@@ -19,9 +19,9 @@ public class CurrencyServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
+        String unverifiedCurrencyCode = req.getPathInfo();
 
-        if (pathInfo == null || pathInfo.equals("/")) {
+        if (unverifiedCurrencyCode == null || unverifiedCurrencyCode.equals("/")) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "The currency code is missing in the request.");
             return;
         }
@@ -29,10 +29,8 @@ public class CurrencyServlet extends HttpServlet {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
-        String currencyCode = pathInfo.substring(1).toUpperCase();
-
         try {
-            Optional<CurrencyResponseDto> dtoOptional = currencyService.findByCode(currencyCode);
+            Optional<CurrencyResponseDto> dtoOptional = currencyService.findByCode(unverifiedCurrencyCode);
             if (dtoOptional.isPresent()) {
                 CurrencyResponseDto responseDto = dtoOptional.get();
                 String responseAsString = mapper.writeValueAsString(responseDto);

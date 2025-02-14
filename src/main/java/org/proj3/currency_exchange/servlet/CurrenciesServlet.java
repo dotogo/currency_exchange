@@ -6,11 +6,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.proj3.currency_exchange.dto.CurrencyRequestDto;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
+import org.proj3.currency_exchange.entity.CurrencyEntity;
+import org.proj3.currency_exchange.mapper.CurrencyMapper;
 import org.proj3.currency_exchange.service.CurrencyService;
 
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,26 +49,46 @@ public class CurrenciesServlet extends HttpServlet {
             return;
         }
 
+        String currencyName = parameterMap.get("name")[0];
         String currencyCode = parameterMap.get("code")[0];
+        String currencySign = parameterMap.get("sign")[0];
+
+        if (currencyName == null || currencyName.isEmpty()) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Name cannot be empty.");
+            return;
+        }
+
+        if (currencyCode == null || currencyCode.isEmpty()) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Code cannot be empty.");
+            return;
+        }
+
+        if (currencySign == null || currencySign.isEmpty()) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Sign cannot be empty.");
+            return;
+        }
+
         try {
             Optional<CurrencyResponseDto> currencyResponseDto = currencyService.findByCode(currencyCode);
-            if(currencyResponseDto.isPresent()) {
+            if (currencyResponseDto.isPresent()) {
+                System.out.println("currencyResponseDto.get().getCode()" + currencyResponseDto.get().getCode());
                 resp.setStatus(HttpServletResponse.SC_CONFLICT);
                 resp.getWriter().write("A currency with this code already exists.");
                 return;
             }
+
+            CurrencyRequestDto requestDto = new CurrencyRequestDto();
+            requestDto.setCode(currencyCode);
+            requestDto.setName(currencyName);
+            requestDto.setSign(currencySign);
+
+            Optional<CurrencyResponseDto> saved = currencyService.save(requestDto);
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.getWriter().write(objectMapper.writeValueAsString(saved));
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-
-        String[] codes = parameterMap.get("code");
-        int length = codes.length;
-        System.out.println("codes length " + length);
-
-        if (length == 1) {
-            System.out.println("codes length 1.  " + codes[0]);
-        }
-        System.out.println();
     }
 }

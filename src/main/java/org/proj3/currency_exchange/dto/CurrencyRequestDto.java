@@ -2,15 +2,15 @@ package org.proj3.currency_exchange.dto;
 
 public class CurrencyRequestDto {
     private String code;
-    private String fullName;
+    private String name;
     private String sign;
 
     public void setCode(String code) {
         this.code = code;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setSign(String sign) {
@@ -21,8 +21,8 @@ public class CurrencyRequestDto {
         return this.code;
     }
 
-    public String getFullName() {
-        return this.fullName;
+    public String getName() {
+        return this.name;
     }
 
     public String getSign() {
