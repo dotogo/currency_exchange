@@ -4,6 +4,7 @@ import org.proj3.currency_exchange.dao.CurrencyDao;
 import org.proj3.currency_exchange.dto.CurrencyRequestDto;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.entity.CurrencyEntity;
+import org.proj3.currency_exchange.exception.CurrencyServiceException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyNameException;
 import org.proj3.currency_exchange.exception.IllegalCurrencySignException;
@@ -30,11 +31,7 @@ public class CurrencyService {
     }
 
     public Optional<CurrencyResponseDto> findByCode(String code) {
-        if (code.charAt(0) == '/') {
-            code = code.substring(1).toUpperCase();
-        } else {
-            code = code.toUpperCase();
-        }
+        code = uppercaseAndTrimSlash(code);
 
         Optional<CurrencyEntity> optionalCurrency;
         System.out.println(code);
@@ -43,7 +40,7 @@ public class CurrencyService {
         if (isCurrencyCodeValid(code)) {
             optionalCurrency = currencyDao.findByCode(code);
         } else {
-            throw new IllegalCurrencyCodeException("Invalid currency code");
+            throw new IllegalCurrencyCodeException("findByCode: >>>>> Invalid currency code. <<<<<");
         }
 
         Optional<CurrencyResponseDto> dto = Optional.empty();
@@ -56,6 +53,9 @@ public class CurrencyService {
     }
 
     public Optional<CurrencyResponseDto> save(CurrencyRequestDto currencyRequestDto) {
+        String code = uppercaseAndTrimSlash(currencyRequestDto.getCode());
+        currencyRequestDto.setCode(code);
+
         if (!isCurrencyNameValid(currencyRequestDto.getCode(), currencyRequestDto.getName())) {
             throw new IllegalCurrencyNameException("Invalid currency name");
         }
@@ -64,18 +64,31 @@ public class CurrencyService {
             throw new IllegalCurrencySignException("Invalid currency sign");
         }
 
-        CurrencyEntity entity = mapper.toEntity(currencyRequestDto);
-        CurrencyEntity savedCurrency = currencyDao.save(entity);
-        CurrencyResponseDto responseDto = mapper.toDto(savedCurrency);
-        return Optional.of(responseDto);
+        try {
+            CurrencyEntity entity = mapper.toEntity(currencyRequestDto);
+            CurrencyEntity savedCurrency = currencyDao.save(entity);
+            System.out.println("Saved currency :");
+            System.out.println(savedCurrency.toString());
+
+            CurrencyResponseDto responseDto = mapper.toDto(savedCurrency);
+            return Optional.of(responseDto);
+        } catch (Exception e) {
+            throw new CurrencyServiceException("The currency was not saved.", e);
+        }
     }
 
     public static CurrencyService getInstance() {
         return currencyService;
     }
 
-    private boolean isCurrencyCodeValid(String currencyCode) {
+    private boolean isCurrencyCodeValid(String currencyCode) throws IllegalArgumentException {
+
         Currency currency = Currency.getInstance(currencyCode);
+//        try {
+//            currency = Currency.getInstance(currencyCode);
+//        } catch (Exception e) {
+//            throw new IllegalCurrencyCodeException("isCurrencyCodeValid: >>>>> Invalid currency code <<<<<", e);
+//        }
         return currency != null;
     }
 
@@ -89,5 +102,14 @@ public class CurrencyService {
         Currency currency = Currency.getInstance(currencyCode);
         String symbol = currency.getSymbol(Locale.US);
         return symbol.equals(currencySign);
+    }
+
+    private String uppercaseAndTrimSlash(String code) {
+        if (code.charAt(0) == '/') {
+            code = code.substring(1).toUpperCase();
+        } else {
+            code = code.toUpperCase();
+        }
+        return code;
     }
 }

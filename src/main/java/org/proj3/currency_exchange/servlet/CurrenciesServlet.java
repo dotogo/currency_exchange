@@ -53,25 +53,27 @@ public class CurrenciesServlet extends HttpServlet {
         String currencyCode = parameterMap.get("code")[0];
         String currencySign = parameterMap.get("sign")[0];
 
-        if (currencyName == null || currencyName.isEmpty()) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Name cannot be empty.");
+        if (currencyName.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("Name cannot be empty.");
             return;
         }
 
-        if (currencyCode == null || currencyCode.isEmpty()) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Code cannot be empty.");
+        if (currencyCode.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("Code cannot be empty.");
             return;
         }
 
-        if (currencySign == null || currencySign.isEmpty()) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Sign cannot be empty.");
+        if (currencySign.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("Sign cannot be empty.");
             return;
         }
 
         try {
             Optional<CurrencyResponseDto> currencyResponseDto = currencyService.findByCode(currencyCode);
             if (currencyResponseDto.isPresent()) {
-                System.out.println("currencyResponseDto.get().getCode()" + currencyResponseDto.get().getCode());
                 resp.setStatus(HttpServletResponse.SC_CONFLICT);
                 resp.getWriter().write("A currency with this code already exists.");
                 return;
