@@ -15,6 +15,7 @@ import java.util.*;
 public class CurrencyService {
     private static final CurrencyService currencyService = new CurrencyService();
     private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
+    public static final String INVALID_CURRENCY_CODE = "\n>>> Invalid currency code <<< \nOnly real currency codes can be entered.";
     CurrencyMapper mapper = CurrencyMapper.getInstance();
 
     private CurrencyService() {
@@ -32,16 +33,10 @@ public class CurrencyService {
 
     public Optional<CurrencyResponseDto> findByCode(String code) {
         code = uppercaseAndTrimSlash(code);
-
         Optional<CurrencyEntity> optionalCurrency;
-        System.out.println(code);
-        System.out.println();
 
-        if (isCurrencyCodeValid(code)) {
-            optionalCurrency = currencyDao.findByCode(code);
-        } else {
-            throw new IllegalCurrencyCodeException("findByCode: >>>>> Invalid currency code. <<<<<");
-        }
+        validateCurrencyCode(code);
+        optionalCurrency = currencyDao.findByCode(code);
 
         Optional<CurrencyResponseDto> dto = Optional.empty();
         if (optionalCurrency.isPresent()) {
@@ -57,11 +52,11 @@ public class CurrencyService {
         currencyRequestDto.setCode(code);
 
         if (!isCurrencyNameValid(currencyRequestDto.getCode(), currencyRequestDto.getName())) {
-            throw new IllegalCurrencyNameException("Invalid currency name");
+            throw new IllegalCurrencyNameException("Invalid currency name: " + currencyRequestDto.getName());
         }
 
         if (!isCurrencySignValid(currencyRequestDto.getCode(), currencyRequestDto.getSign())) {
-            throw new IllegalCurrencySignException("Invalid currency sign");
+            throw new IllegalCurrencySignException("Invalid currency sign : " + currencyRequestDto.getSign());
         }
 
         try {
@@ -81,15 +76,12 @@ public class CurrencyService {
         return currencyService;
     }
 
-    private boolean isCurrencyCodeValid(String currencyCode) throws IllegalArgumentException {
-
-        Currency currency = Currency.getInstance(currencyCode);
-//        try {
-//            currency = Currency.getInstance(currencyCode);
-//        } catch (Exception e) {
-//            throw new IllegalCurrencyCodeException("isCurrencyCodeValid: >>>>> Invalid currency code <<<<<", e);
-//        }
-        return currency != null;
+    private void validateCurrencyCode(String currencyCode) {
+        try {
+            Currency.getInstance(currencyCode);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalCurrencyCodeException(INVALID_CURRENCY_CODE, e);
+        }
     }
 
     private boolean isCurrencyNameValid(String currencyCode, String currencyName) {
