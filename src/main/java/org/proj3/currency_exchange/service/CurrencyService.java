@@ -4,10 +4,7 @@ import org.proj3.currency_exchange.dao.CurrencyDao;
 import org.proj3.currency_exchange.dto.CurrencyRequestDto;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.entity.CurrencyEntity;
-import org.proj3.currency_exchange.exception.CurrencyServiceException;
-import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
-import org.proj3.currency_exchange.exception.IllegalCurrencyNameException;
-import org.proj3.currency_exchange.exception.IllegalCurrencySignException;
+import org.proj3.currency_exchange.exception.*;
 import org.proj3.currency_exchange.mapper.CurrencyMapper;
 
 import java.util.*;
@@ -15,20 +12,28 @@ import java.util.*;
 public class CurrencyService {
     private static final CurrencyService currencyService = new CurrencyService();
     private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
-    public static final String INVALID_CURRENCY_CODE = "\n>>> Invalid currency code <<< \nOnly real currency codes can be entered.";
-    CurrencyMapper mapper = CurrencyMapper.getInstance();
+
+    private static final String INVALID_CURRENCY_CODE = "\n>>> Invalid currency code <<< \nOnly real currency codes can be entered.";
+    private static final String ERROR_FINDING_BY_CODE = "\n>>> Something went wrong while finding for currency by code :( <<<";
+    private static final String ERROR_FINDING_ALL_CURRENCIES = "\n>>> Something went wrong while finding all currencies :( <<<";
+
+    private final CurrencyMapper mapper = CurrencyMapper.getInstance();
 
     private CurrencyService() {
     }
 
     public List<CurrencyResponseDto> findAll() {
-        List<CurrencyEntity> entities = currencyDao.findAll();
+        try {
+            List<CurrencyEntity> entities = currencyDao.findAll();
 
-        List<CurrencyResponseDto> dtos = new ArrayList<>();
-        for (CurrencyEntity entity : entities) {
-            dtos.add(mapper.toDto(entity));
+            List<CurrencyResponseDto> dtos = new ArrayList<>();
+            for (CurrencyEntity entity : entities) {
+                dtos.add(mapper.toDto(entity));
+            }
+            return dtos;
+        } catch (DaoException e) {
+            throw new CurrencyServiceException(ERROR_FINDING_ALL_CURRENCIES, e);
         }
-        return dtos;
     }
 
     public Optional<CurrencyResponseDto> findByCode(String code) {
@@ -36,15 +41,20 @@ public class CurrencyService {
         Optional<CurrencyEntity> optionalCurrency;
 
         validateCurrencyCode(code);
-        optionalCurrency = currencyDao.findByCode(code);
 
-        Optional<CurrencyResponseDto> dto = Optional.empty();
-        if (optionalCurrency.isPresent()) {
-            CurrencyEntity entity = optionalCurrency.get();
-            CurrencyResponseDto responseDto = mapper.toDto(entity);
-            dto = Optional.of(responseDto);
+        try {
+            optionalCurrency = currencyDao.findByCode(code);
+
+            Optional<CurrencyResponseDto> dto = Optional.empty();
+            if (optionalCurrency.isPresent()) {
+                CurrencyEntity entity = optionalCurrency.get();
+                CurrencyResponseDto responseDto = mapper.toDto(entity);
+                dto = Optional.of(responseDto);
+            }
+            return dto;
+        } catch (Exception e) {
+            throw new CurrencyServiceException(ERROR_FINDING_BY_CODE, e);
         }
-        return dto;
     }
 
     public Optional<CurrencyResponseDto> save(CurrencyRequestDto currencyRequestDto) {

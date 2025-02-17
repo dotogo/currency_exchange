@@ -64,7 +64,7 @@ public class CurrencyDao {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new DaoException("Error finding currency by code", e);
         }
         return currency;
     }
