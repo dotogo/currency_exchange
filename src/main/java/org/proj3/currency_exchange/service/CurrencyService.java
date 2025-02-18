@@ -16,6 +16,7 @@ public class CurrencyService {
     private static final String INVALID_CURRENCY_CODE = "\n>>> Invalid currency code <<< \nOnly real currency codes can be entered.";
     private static final String ERROR_FINDING_BY_CODE = "\n>>> Something went wrong while finding for currency by code :( <<<";
     private static final String ERROR_FINDING_ALL_CURRENCIES = "\n>>> Something went wrong while finding all currencies :( <<<";
+    private static final String ERROR_SAVING_CURRENCY = ">>> The currency was not saved <<<";
 
     private final CurrencyMapper mapper = CurrencyMapper.getInstance();
 
@@ -72,13 +73,10 @@ public class CurrencyService {
         try {
             CurrencyEntity entity = mapper.toEntity(currencyRequestDto);
             CurrencyEntity savedCurrency = currencyDao.save(entity);
-            System.out.println("Saved currency :");
-            System.out.println(savedCurrency.toString());
-
             CurrencyResponseDto responseDto = mapper.toDto(savedCurrency);
             return Optional.of(responseDto);
         } catch (Exception e) {
-            throw new CurrencyServiceException("The currency was not saved.", e);
+            throw new CurrencyServiceException(ERROR_SAVING_CURRENCY, e);
         }
     }
 

@@ -77,15 +77,21 @@ public class CurrencyDao {
             preparedStatement.setString(2, currency.getFullName());
             preparedStatement.setString(3, currency.getSign());
 
-            System.out.println();
+            int affectedRows = preparedStatement.executeUpdate();
+            if (affectedRows == 0) {
+                throw new DaoException("Saving currency failed, no rows affected.");
+            }
 
-            preparedStatement.executeUpdate();
+            String lastIdSQL = "SELECT last_insert_rowid()";
 
-            ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
-            System.out.println(generatedKeys);
-            if (generatedKeys.next()) {
-                int generatedId = generatedKeys.getInt("id");
-                currency.setId(generatedId);
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(lastIdSQL)) {
+                if (resultSet.next()) {
+                    int generatedId = resultSet.getInt(1);
+                    currency.setId(generatedId);
+                } else {
+                    throw new DaoException("Failed to retrieve generated ID.");
+                }
             }
             return currency;
 

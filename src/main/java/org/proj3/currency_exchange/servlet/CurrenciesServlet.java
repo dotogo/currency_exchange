@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.dto.CurrencyRequestDto;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.entity.CurrencyEntity;
+import org.proj3.currency_exchange.exception.*;
 import org.proj3.currency_exchange.mapper.CurrencyMapper;
 import org.proj3.currency_exchange.service.CurrencyService;
 
@@ -72,8 +73,8 @@ public class CurrenciesServlet extends HttpServlet {
         }
 
         try {
-            Optional<CurrencyResponseDto> currencyResponseDto = currencyService.findByCode(currencyCode);
-            if (currencyResponseDto.isPresent()) {
+            Optional<CurrencyResponseDto> dtoOptional = currencyService.findByCode(currencyCode);
+            if (dtoOptional.isPresent()) {
                 resp.setStatus(HttpServletResponse.SC_CONFLICT);
                 resp.getWriter().write("A currency with this code already exists.");
                 return;
@@ -84,13 +85,25 @@ public class CurrenciesServlet extends HttpServlet {
             requestDto.setName(currencyName);
             requestDto.setSign(currencySign);
 
-            Optional<CurrencyResponseDto> saved = currencyService.save(requestDto);
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            resp.getWriter().write(objectMapper.writeValueAsString(saved));
+            resp.setContentType("application/json");
+            resp.setCharacterEncoding("UTF-8");
 
+            Optional<CurrencyResponseDto> savedDtoOptional = currencyService.save(requestDto);
+            if (savedDtoOptional.isPresent()) {
+                CurrencyResponseDto currencyResponseDto = savedDtoOptional.get();
+                String responseAsString = objectMapper.writeValueAsString(currencyResponseDto);
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+                resp.getWriter().write(responseAsString);
+            }
+
+        } catch (IllegalCurrencyCodeException | IllegalCurrencyNameException | IllegalCurrencySignException e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("Currency cannot be added. " + e.getMessage());
+        } catch (DaoException | CurrencyServiceException e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("Database error. " + e.getMessage());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 }
