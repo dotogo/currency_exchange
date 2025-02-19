@@ -69,6 +69,28 @@ public class CurrencyDao {
         return currency;
     }
 
+    public Optional<CurrencyEntity> findById(int id) {
+        Optional<CurrencyEntity> currency = Optional.empty();
+        String sql = """
+                SELECT id, code, full_name, sign
+                FROM currencies WHERE id = ?
+                """;
+
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setInt(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                currency = Optional.of(mapRowToEntity(resultSet));
+            }
+
+        } catch (SQLException e) {
+            throw new DaoException("Error finding currency by id", e);
+        }
+        return currency;
+    }
+
     public CurrencyEntity save(CurrencyEntity currency) {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS)) {
