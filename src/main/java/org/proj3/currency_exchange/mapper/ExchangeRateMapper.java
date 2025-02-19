@@ -7,14 +7,14 @@ import org.proj3.currency_exchange.entity.ExchangeRateEntity;
 
 import java.math.BigDecimal;
 
-public class CurrencyExchangeRateMapper {
-    private static final CurrencyExchangeRateMapper instance = new CurrencyExchangeRateMapper();
+public class ExchangeRateMapper {
+    private static final ExchangeRateMapper instance = new ExchangeRateMapper();
 
-    private CurrencyExchangeRateMapper() {
+    private ExchangeRateMapper() {
 
     }
 
-    public static CurrencyExchangeRateMapper getInstance() {
+    public static ExchangeRateMapper getInstance() {
         return instance;
     }
 

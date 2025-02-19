@@ -10,7 +10,7 @@ import org.proj3.currency_exchange.mapper.CurrencyMapper;
 import java.util.*;
 
 public class CurrencyService {
-    private static final CurrencyService currencyService = new CurrencyService();
+    private static final CurrencyService instance = new CurrencyService();
     private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
 
     private static final String INVALID_CURRENCY_CODE = "\n>>> Invalid currency code <<< \nOnly real currency codes can be entered.";
@@ -81,7 +81,7 @@ public class CurrencyService {
     }
 
     public static CurrencyService getInstance() {
-        return currencyService;
+        return instance;
     }
 
     private void validateCurrencyCode(String currencyCode) {
