@@ -6,8 +6,8 @@ import java.math.BigDecimal;
 
 public class ExchangeRateResponseDto {
     private int id;
-    private CurrencyEntity baseCurrency;
-    private CurrencyEntity targetCurrency;
+    private CurrencyResponseDto baseCurrency;
+    private CurrencyResponseDto targetCurrency;
     private BigDecimal rate;
 
     public int getId() {
@@ -18,19 +18,19 @@ public class ExchangeRateResponseDto {
         this.id = id;
     }
 
-    public CurrencyEntity getBaseCurrency() {
+    public CurrencyResponseDto getBaseCurrency() {
         return baseCurrency;
     }
 
-    public void setBaseCurrency(CurrencyEntity baseCurrency) {
+    public void setBaseCurrency(CurrencyResponseDto baseCurrency) {
         this.baseCurrency = baseCurrency;
     }
 
-    public CurrencyEntity getTargetCurrency() {
+    public CurrencyResponseDto getTargetCurrency() {
         return targetCurrency;
     }
 
-    public void setTargetCurrency(CurrencyEntity targetCurrency) {
+    public void setTargetCurrency(CurrencyResponseDto targetCurrency) {
         this.targetCurrency = targetCurrency;
     }
 

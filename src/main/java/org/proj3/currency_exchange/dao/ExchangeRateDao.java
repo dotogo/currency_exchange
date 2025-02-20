@@ -30,7 +30,7 @@ public class ExchangeRateDao {
         List<ExchangeRateEntity> rateEntities = new ArrayList<>();
         String sql = """
                 SELECT
-                    er.id,
+                    er.id AS exchange_rate_id,
                     er.rate,
                     bc.id AS base_currency_id,
                     bc.code AS base_currency_code,
@@ -59,7 +59,7 @@ public class ExchangeRateDao {
 
     private ExchangeRateEntity mapRowToEntity(ResultSet resultSet) throws SQLException {
         ExchangeRateEntity rateEntity = new ExchangeRateEntity();
-        rateEntity.setId(resultSet.getInt("id"));
+        rateEntity.setId(resultSet.getInt("exchange_rate_id"));
         rateEntity.setRate(resultSet.getBigDecimal("rate"));
 
         CurrencyEntity baseCurrency = new CurrencyEntity(
@@ -67,7 +67,7 @@ public class ExchangeRateDao {
                 resultSet.getString("base_currency_name"),
                 resultSet.getString("base_currency_sign")
         );
-        baseCurrency.setId(resultSet.getInt("target_currency_id"));
+        baseCurrency.setId(resultSet.getInt("base_currency_id"));
 
         CurrencyEntity targetCurrency = new CurrencyEntity(
                 resultSet.getString("target_currency_code"),
