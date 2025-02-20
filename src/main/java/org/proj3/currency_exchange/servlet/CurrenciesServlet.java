@@ -32,8 +32,8 @@ public class CurrenciesServlet extends HttpServlet {
 
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
-            resp.getWriter().write(jsonResponse);
             resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(jsonResponse);
         } catch (RuntimeException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write("{\"error\": \"Internal server error\"}");
