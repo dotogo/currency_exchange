@@ -6,6 +6,7 @@ import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.entity.CurrencyEntity;
 import org.proj3.currency_exchange.exception.*;
 import org.proj3.currency_exchange.mapper.CurrencyMapper;
+import org.proj3.currency_exchange.util.CurrencyUtil;
 
 import java.util.*;
 
@@ -38,10 +39,10 @@ public class CurrencyService {
     }
 
     public Optional<CurrencyResponseDto> findByCode(String code) {
-        code = uppercaseAndTrimSlash(code);
+        code = CurrencyUtil.normalizeCurrencyCode(code);
         Optional<CurrencyEntity> optionalCurrency;
 
-        validateCurrencyCode(code);
+        CurrencyUtil.validateCurrencyCode(code);
 
         try {
             optionalCurrency = currencyDao.findByCode(code);
@@ -59,7 +60,7 @@ public class CurrencyService {
     }
 
     public Optional<CurrencyResponseDto> save(CurrencyRequestDto currencyRequestDto) {
-        String code = uppercaseAndTrimSlash(currencyRequestDto.getCode());
+        String code = CurrencyUtil.normalizeCurrencyCode(currencyRequestDto.getCode());
         currencyRequestDto.setCode(code);
 
         if (!isCurrencyNameValid(currencyRequestDto.getCode(), currencyRequestDto.getName())) {
@@ -84,14 +85,6 @@ public class CurrencyService {
         return instance;
     }
 
-    private void validateCurrencyCode(String currencyCode) {
-        try {
-            Currency.getInstance(currencyCode);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalCurrencyCodeException(INVALID_CURRENCY_CODE, e);
-        }
-    }
-
     private boolean isCurrencyNameValid(String currencyCode, String currencyName) {
         Currency currency = Currency.getInstance(currencyCode);
         String displayName = currency.getDisplayName(Locale.US);
@@ -104,12 +97,4 @@ public class CurrencyService {
         return symbol.equals(currencySign);
     }
 
-    private String uppercaseAndTrimSlash(String code) {
-        if (code.charAt(0) == '/') {
-            code = code.substring(1).toUpperCase();
-        } else {
-            code = code.toUpperCase();
-        }
-        return code;
-    }
 }
