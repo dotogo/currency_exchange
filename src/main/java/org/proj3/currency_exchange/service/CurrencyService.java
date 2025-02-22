@@ -14,7 +14,6 @@ public class CurrencyService {
     private static final CurrencyService instance = new CurrencyService();
     private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
 
-    private static final String INVALID_CURRENCY_CODE = "\n>>> Invalid currency code <<< \nOnly real currency codes can be entered.";
     private static final String ERROR_FINDING_BY_CODE = "\n>>> Something went wrong while finding for currency by code :( <<<";
     private static final String ERROR_FINDING_ALL_CURRENCIES = "\n>>> Something went wrong while finding all currencies :( <<<";
     private static final String ERROR_SAVING_CURRENCY = ">>> The currency was not saved <<<";
@@ -40,9 +39,9 @@ public class CurrencyService {
 
     public Optional<CurrencyResponseDto> findByCode(String code) {
         code = CurrencyUtil.normalizeCurrencyCode(code);
-        Optional<CurrencyEntity> optionalCurrency;
-
         CurrencyUtil.validateCurrencyCode(code);
+
+        Optional<CurrencyEntity> optionalCurrency;
 
         try {
             optionalCurrency = currencyDao.findByCode(code);

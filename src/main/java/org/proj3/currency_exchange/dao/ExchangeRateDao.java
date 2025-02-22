@@ -19,6 +19,27 @@ public class ExchangeRateDao {
     private static final  ExchangeRateDao instance = new ExchangeRateDao();
     private static final DataSource dataSource = DatabaseConfig.getDataSource();
 
+    private static final String BASE_QUERY = """
+            SELECT
+                er.id AS exchange_rate_id,
+                er.rate,
+                bc.id AS base_currency_id,
+                bc.code AS base_currency_code,
+                bc.full_name AS base_currency_name,
+                bc.sign AS base_currency_sign,
+                tc.id AS target_currency_id,
+                tc.code AS target_currency_code,
+                tc.full_name AS target_currency_name,
+                tc.sign AS target_currency_sign
+            FROM exchangeRates er
+            JOIN currencies bc ON er.base_currency_id = bc.id
+            JOIN currencies tc ON er.target_currency_id = tc.id
+            """;
+
+    private static final String FIND_BY_CODE_WHERE = """
+            WHERE bc.code = ? AND tc.code = ?
+            """;
+
     private ExchangeRateDao() {
     }
 
@@ -28,25 +49,9 @@ public class ExchangeRateDao {
 
     public List<ExchangeRateEntity> findAll() {
         List<ExchangeRateEntity> rateEntities = new ArrayList<>();
-        String sql = """
-                SELECT
-                    er.id AS exchange_rate_id,
-                    er.rate,
-                    bc.id AS base_currency_id,
-                    bc.code AS base_currency_code,
-                    bc.full_name AS base_currency_name,
-                    bc.sign AS base_currency_sign,
-                    tc.id AS target_currency_id,
-                    tc.code AS target_currency_code,
-                    tc.full_name AS target_currency_name,
-                    tc.sign AS target_currency_sign
-                FROM exchangeRates er
-                JOIN currencies bc ON er.base_currency_id = bc.id
-                JOIN currencies tc ON er.target_currency_id = tc.id
-                """;
 
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+             PreparedStatement preparedStatement = connection.prepareStatement(BASE_QUERY)) {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 rateEntities.add(mapRowToEntity(resultSet));
@@ -56,6 +61,31 @@ public class ExchangeRateDao {
         }
         return rateEntities;
     }
+
+
+    public Optional<ExchangeRateEntity> findByCode(String currencyPair) {
+        String baseCurrencyCode = currencyPair.substring(0, 3);
+        String targetCurrencyCode = currencyPair.substring(3);
+        String sql = BASE_QUERY + FIND_BY_CODE_WHERE;
+
+        Optional<ExchangeRateEntity> exchangeRate = Optional.empty();
+
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, baseCurrencyCode);
+            preparedStatement.setString(2, targetCurrencyCode);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                exchangeRate = Optional.of(mapRowToEntity(resultSet));
+            }
+
+        } catch (SQLException e) {
+            throw new DaoException("Error finding exchange rate by code pair.", e);
+        }
+        return exchangeRate;
+    }
+
 
     private ExchangeRateEntity mapRowToEntity(ResultSet resultSet) throws SQLException {
         ExchangeRateEntity rateEntity = new ExchangeRateEntity();

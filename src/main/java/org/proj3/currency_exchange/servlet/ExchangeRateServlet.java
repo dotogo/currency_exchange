@@ -39,11 +39,11 @@ public class ExchangeRateServlet extends HttpServlet {
                 resp.getWriter().write(responseAsString);
             } else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"message\": \"ExchangeRate not found.\"}");
+                resp.getWriter().write("{\"message\": \"Exchange rate not found.\"}");
             }
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"message\": \"Internal server error.\"}" + e.getMessage());
+            resp.getWriter().write(e.getMessage());
         }
 
         
