@@ -5,24 +5,24 @@ import org.proj3.currency_exchange.entity.CurrencyEntity;
 import java.math.BigDecimal;
 
 public class ExchangeRateRequestDto {
-    private CurrencyEntity baseCurrency;
-    private CurrencyEntity targetCurrency;
+    private String baseCurrencyCode;
+    private String targetCurrencyCode;
     private BigDecimal rate;
 
-    public CurrencyEntity getBaseCurrency() {
-        return baseCurrency;
+    public String getBaseCurrencyCode() {
+        return baseCurrencyCode;
     }
 
-    public void setBaseCurrency(CurrencyEntity baseCurrency) {
-        this.baseCurrency = baseCurrency;
+    public void setBaseCurrencyCode(String baseCurrencyCode) {
+        this.baseCurrencyCode = baseCurrencyCode;
     }
 
-    public CurrencyEntity getTargetCurrency() {
-        return targetCurrency;
+    public String getTargetCurrencyCode() {
+        return targetCurrencyCode;
     }
 
-    public void setTargetCurrency(CurrencyEntity targetCurrency) {
-        this.targetCurrency = targetCurrency;
+    public void setTargetCurrencyCode(String targetCurrencyCode) {
+        this.targetCurrencyCode = targetCurrencyCode;
     }
 
     public BigDecimal getRate() {

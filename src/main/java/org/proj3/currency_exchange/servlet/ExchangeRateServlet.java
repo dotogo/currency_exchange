@@ -6,7 +6,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.service.ExchangeRateService;
 
@@ -15,6 +14,9 @@ import java.util.Optional;
 
 @WebServlet("/exchangeRate/*")
 public class ExchangeRateServlet extends HttpServlet {
+    private static final String CURRENCY_CODES_MISSING_IN_ADDRESS = "{\"message\": \"Currency codes of the pair are missing in the address.\"}";
+    private static final String EXCHANGE_RATE_NOT_FOUND = "{\"message\": \"Exchange rate not found.\"}";
+
     private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -23,7 +25,7 @@ public class ExchangeRateServlet extends HttpServlet {
         String unverifiedCurrencyPairs = req.getPathInfo();
 
         if (unverifiedCurrencyPairs == null || unverifiedCurrencyPairs.equals("/")) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "{\"message\": \"Currency codes of the pair are missing in the address.\"}");
+            sendResponse(resp, HttpServletResponse.SC_BAD_REQUEST, CURRENCY_CODES_MISSING_IN_ADDRESS );
             return;
         }
 
@@ -35,19 +37,18 @@ public class ExchangeRateServlet extends HttpServlet {
             if (dtoOptional.isPresent()) {
                 ExchangeRateResponseDto responseDto = dtoOptional.get();
                 String responseAsString = mapper.writeValueAsString(responseDto);
-                resp.setStatus(HttpServletResponse.SC_OK);
-                resp.getWriter().write(responseAsString);
+                sendResponse(resp, HttpServletResponse.SC_OK, responseAsString);
             } else {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"message\": \"Exchange rate not found.\"}");
+                sendResponse(resp, HttpServletResponse.SC_NOT_FOUND, EXCHANGE_RATE_NOT_FOUND);
             }
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(e.getMessage());
         }
+    }
 
-        
-
-
+    private void sendResponse(HttpServletResponse resp, int status, String message) throws IOException {
+        resp.setStatus(status);
+        resp.getWriter().write(message);
     }
 }

@@ -29,6 +29,4 @@ public class CurrencyUtil {
         }
         return currencyCode.toUpperCase();
     }
-
-
 }

@@ -87,6 +87,15 @@ public class ExchangeRateDao {
     }
 
 
+
+    public ExchangeRateEntity save(ExchangeRateEntity exchangeRate) {
+
+        //    TODO  make method
+
+        return new ExchangeRateEntity();
+    }
+
+
     private ExchangeRateEntity mapRowToEntity(ResultSet resultSet) throws SQLException {
         ExchangeRateEntity rateEntity = new ExchangeRateEntity();
         rateEntity.setId(resultSet.getInt("exchange_rate_id"));

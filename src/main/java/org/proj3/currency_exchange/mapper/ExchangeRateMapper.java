@@ -19,12 +19,12 @@ public class ExchangeRateMapper {
         return instance;
     }
 
-    public ExchangeRateEntity toEntity(ExchangeRateRequestDto requestDto) {
-        CurrencyEntity baseCurrency = requestDto.getBaseCurrency();
-        CurrencyEntity targetCurrency = requestDto.getTargetCurrency();
-        BigDecimal rate = requestDto.getRate();
-        return new ExchangeRateEntity( baseCurrency, targetCurrency, rate);
-    }
+//    public ExchangeRateEntity toEntity(ExchangeRateRequestDto requestDto) {
+//        CurrencyEntity baseCurrency = requestDto.getBaseCurrency();
+//        CurrencyEntity targetCurrency = requestDto.getTargetCurrency();
+//        BigDecimal rate = requestDto.getRate();
+//        return new ExchangeRateEntity( baseCurrency, targetCurrency, rate);
+//    }
 
     public ExchangeRateResponseDto toDto(ExchangeRateEntity exchangeRateEntity) {
         ExchangeRateResponseDto dto = new ExchangeRateResponseDto();
