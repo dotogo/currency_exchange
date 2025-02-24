@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @WebServlet("/exchangeRates")
-public class ExchangeRatesServlet extends HttpServlet {
+public class ExchangeRatesServlet extends BaseServlet {
     private static final String FIELD_IS_MISSING = "A required form field is missing.";
     private static final String INTERNAL_SERVER_ERROR = "Internal server error.";
     private static final String EMPTY_BASE_CURRENCY_CODE = "Base currency code cannot be empty.";
@@ -136,14 +136,6 @@ public class ExchangeRatesServlet extends HttpServlet {
             return true;
         }
         return false;
-    }
-
-    private void sendErrorResponse(HttpServletResponse resp, int status, String message) throws IOException {
-        ErrorResponse errorResponse = new ErrorResponse(message);
-        String json = objectMapper.writeValueAsString(errorResponse);
-
-        resp.setStatus(status);
-        resp.getWriter().write(json);
     }
 
 }

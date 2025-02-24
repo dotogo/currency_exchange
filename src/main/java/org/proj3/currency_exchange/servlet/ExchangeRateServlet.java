@@ -14,9 +14,9 @@ import java.io.IOException;
 import java.util.Optional;
 
 @WebServlet("/exchangeRate/*")
-public class ExchangeRateServlet extends HttpServlet {
-    private static final String CURRENCY_CODES_MISSING_IN_ADDRESS = "{\"message\": \"Currency codes of the pair are missing in the address.\"}";
-    private static final String EXCHANGE_RATE_NOT_FOUND = "{\"message\": \"Exchange rate not found.\"}";
+public class ExchangeRateServlet extends BaseServlet {
+    private static final String CURRENCY_CODES_MISSING_IN_ADDRESS = "Currency codes of the pair are missing in the address.";
+    private static final String EXCHANGE_RATE_NOT_FOUND = "Exchange rate not found.";
 
     private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -25,33 +25,27 @@ public class ExchangeRateServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String unverifiedCurrencyPairs = req.getPathInfo();
 
-        if (unverifiedCurrencyPairs == null || unverifiedCurrencyPairs.equals("/")) {
-            sendResponse(resp, HttpServletResponse.SC_BAD_REQUEST, CURRENCY_CODES_MISSING_IN_ADDRESS );
-            return;
-        }
-
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
+
+        if (unverifiedCurrencyPairs == null || unverifiedCurrencyPairs.equals("/")) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, CURRENCY_CODES_MISSING_IN_ADDRESS);
+            return;
+        }
 
         try {
             Optional<ExchangeRateResponseDto> dtoOptional = exchangeRateService.findByCode(unverifiedCurrencyPairs);
             if (dtoOptional.isPresent()) {
                 ExchangeRateResponseDto responseDto = dtoOptional.get();
                 String responseAsString = mapper.writeValueAsString(responseDto);
-                sendResponse(resp, HttpServletResponse.SC_OK, responseAsString);
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.getWriter().write(responseAsString);
             } else {
-                sendResponse(resp, HttpServletResponse.SC_NOT_FOUND, EXCHANGE_RATE_NOT_FOUND);
+                sendErrorResponse(resp, HttpServletResponse.SC_NOT_FOUND, EXCHANGE_RATE_NOT_FOUND);
             }
         } catch (Exception e) {
-            sendResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
-    private void sendResponse(HttpServletResponse resp, int status, String message) throws IOException {
-        ErrorResponse errorResponse = new ErrorResponse(message);
-        String json = mapper.writeValueAsString(errorResponse);
-
-        resp.setStatus(status);
-        resp.getWriter().write(json);
-    }
 }
