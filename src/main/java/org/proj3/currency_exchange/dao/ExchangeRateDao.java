@@ -7,10 +7,7 @@ import org.proj3.currency_exchange.util.DatabaseConfig;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +37,14 @@ public class ExchangeRateDao {
             WHERE bc.code = ? AND tc.code = ?
             """;
 
+    private static final String SAVE_SQL = """
+            INSERT INTO exchangeRates (base_currency_id, target_currency_id, rate)
+            VALUES (?, ?, ?)
+            """;
+    private static final String FINDING_ALL_ERROR = "Error while finding exchange rates.";
+    private static final String FINDING_BY_CODE_PAIR_ERROR = "Error finding exchange rate by code pair.";
+//    private static final String SAVING_ERROR = "Error saving exchange rate.";
+
     private ExchangeRateDao() {
     }
 
@@ -57,7 +62,7 @@ public class ExchangeRateDao {
                 rateEntities.add(mapRowToEntity(resultSet));
             }
         } catch (SQLException e) {
-            throw new DaoException("Error while fetching exchange rates", e);
+            throw new DaoException(FINDING_ALL_ERROR, e);
         }
         return rateEntities;
     }
@@ -81,18 +86,40 @@ public class ExchangeRateDao {
             }
 
         } catch (SQLException e) {
-            throw new DaoException("Error finding exchange rate by code pair.", e);
+            throw new DaoException(FINDING_BY_CODE_PAIR_ERROR, e);
         }
         return exchangeRate;
     }
 
-
-
     public ExchangeRateEntity save(ExchangeRateEntity exchangeRate) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(SAVE_SQL)) {
 
-        //    TODO  make method
+            preparedStatement.setInt(1, exchangeRate.getBaseCurrency().getId());
+            preparedStatement.setInt(2, exchangeRate.getTargetCurrency().getId());
+            preparedStatement.setBigDecimal(3, exchangeRate.getRate());
 
-        return new ExchangeRateEntity();
+            int affectedRows = preparedStatement.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new DaoException("Saving exchange rate failed, no rows affected.");
+            }
+
+            String lastIdSQL = "SELECT last_insert_rowid()";
+
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(lastIdSQL)) {
+
+                if (resultSet.next()) {
+                    exchangeRate.setId(resultSet.getInt(1));
+                } else {
+                    throw new DaoException("Failed to retrieve generated ID.");
+                }
+            }
+            return exchangeRate;
+        } catch (SQLException e) {
+            throw new DaoException("Error saving exchange rate.", e);
+        }
     }
 
 

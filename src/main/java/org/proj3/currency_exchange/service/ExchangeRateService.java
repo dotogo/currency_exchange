@@ -22,15 +22,13 @@ public class ExchangeRateService {
     private static final ExchangeRateDao exchangeRateDao = ExchangeRateDao.getInstance();
     private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
 
-    private static final String ERROR_FINDING_ALL_EXCHANGE_RATES = "\n>>> Something went wrong while finding all exchange rates :( <<<";
-    private static final String INVALID_CURRENCY_PAIR_LENGTH ="{\"message\": \"Invalid length of currency pair code. " +
-                                                              "Please enter exactly 6 characters with real currency codes.\"}";
-    private static final String INVALID_EXCHANGE_RATE = "{\"message\": \"Invalid exchange rate. " +
-                                                        "Please enter a positive decimal number with no more than 6 decimal places.\"}";
-    private static final String ERROR_FINDING_BASE_CURRENCY = "{\"message\": \"Database error. " +
-                                                              "Base currency is not available.\"}";
-    private static final String ERROR_FINDING_TARGET_CURRENCY = "{\"message\": \"Database error. " +
-                                                              "Target currency is not available.\"}";
+    private static final String ERROR_FINDING_ALL_EXCHANGE_RATES = ">>> Something went wrong while finding all exchange rates :( <<<";
+    private static final String INVALID_CURRENCY_PAIR_LENGTH = "Invalid length of currency pair code. " +
+                                                              "Please enter exactly 6 characters with real currency codes.";
+    private static final String INVALID_EXCHANGE_RATE = "Invalid exchange rate. " +
+                                                        "Please enter a positive decimal number with no more than 6 decimal places.";
+    private static final String ERROR_FINDING_BASE_CURRENCY = "Database error. Base currency is not available.";
+    private static final String ERROR_FINDING_TARGET_CURRENCY = "Database error. Target currency is not available.";
 
     private final ExchangeRateMapper mapper = ExchangeRateMapper.getInstance();
 

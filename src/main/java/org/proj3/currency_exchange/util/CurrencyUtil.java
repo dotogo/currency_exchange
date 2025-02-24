@@ -5,7 +5,7 @@ import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import java.util.Currency;
 
 public class CurrencyUtil {
-    private static final String INVALID_CURRENCY_CODE ="{\"message\": \"Invalid currency code. Only real currency codes can be used.\"}";
+    private static final String INVALID_CURRENCY_CODE = "Invalid currency code. Only real currency codes can be used.";
 
     private CurrencyUtil() {
 

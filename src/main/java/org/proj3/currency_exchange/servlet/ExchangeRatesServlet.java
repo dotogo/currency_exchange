@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
+import org.proj3.currency_exchange.dto.ErrorResponse;
 import org.proj3.currency_exchange.dto.ExchangeRateRequestDto;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.*;
@@ -20,14 +21,14 @@ import java.util.Optional;
 
 @WebServlet("/exchangeRates")
 public class ExchangeRatesServlet extends HttpServlet {
-    private static final String FIELD_IS_MISSING = "{\"message\": \"A required form field is missing.\"}";
-    private static final String INTERNAL_SERVER_ERROR = "{\"message\": \"Internal server error\"}";
-    private static final String EMPTY_BASE_CURRENCY_CODE = "{\"message\": \"Base currency code cannot be empty.\"}";
-    private static final String EMPTY_TARGET_CURRENCY_CODE = "{\"message\": \"Target currency code cannot be empty.\"}";
-    private static final String EMPTY_RATE = "{\"message\": \"Rate cannot be empty.\"}";
-    private static final String PAIR_ALREADY_EXISTS = "{\"message\": \"The currency pair already exists.\"}";
-    private static final String INVALID_EXCHANGE_RATE = "{\"message\": \"Invalid exchange rate. " +
-                                                        "Please enter a positive decimal number with no more than 6 decimal places.\"}";
+    private static final String FIELD_IS_MISSING = "A required form field is missing.";
+    private static final String INTERNAL_SERVER_ERROR = "Internal server error.";
+    private static final String EMPTY_BASE_CURRENCY_CODE = "Base currency code cannot be empty.";
+    private static final String EMPTY_TARGET_CURRENCY_CODE = "Target currency code cannot be empty.";
+    private static final String EMPTY_RATE = "Rate cannot be empty.";
+    private static final String PAIR_ALREADY_EXISTS = "The currency pair already exists.";
+    private static final String INVALID_EXCHANGE_RATE = "Invalid exchange rate. " +
+                                                        "Please enter a positive decimal number with no more than 6 decimal places.";
 
     private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -56,7 +57,7 @@ public class ExchangeRatesServlet extends HttpServlet {
 
         if (!parameterMap.containsKey("baseCurrencyCode") ||
             !parameterMap.containsKey("targetCurrencyCode") ||
-            !parameterMap.containsKey("parameterRate")) {
+            !parameterMap.containsKey("rate")) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, FIELD_IS_MISSING);
             return;
         }
@@ -67,7 +68,7 @@ public class ExchangeRatesServlet extends HttpServlet {
 
         String baseCurrencyCode = parameterMap.get("baseCurrencyCode")[0];
         String targetCurrencyCode = parameterMap.get("targetCurrencyCode")[0];
-        String parameterRate = parameterMap.get("parameterRate")[0];
+        String parameterRate = parameterMap.get("rate")[0];
 
         BigDecimal exchangeRate;
         try {
@@ -119,7 +120,7 @@ public class ExchangeRatesServlet extends HttpServlet {
     private boolean isRequestParametersEmpty(Map<String, String[]> parameterMap, HttpServletResponse resp) throws IOException {
         String base = parameterMap.get("baseCurrencyCode")[0];
         String target = parameterMap.get("targetCurrencyCode")[0];
-        String rate = parameterMap.get("parameterRate")[0];
+        String rate = parameterMap.get("rate")[0];
 
         if (base == null || base.trim().isEmpty()) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, EMPTY_BASE_CURRENCY_CODE);
@@ -139,8 +140,11 @@ public class ExchangeRatesServlet extends HttpServlet {
     }
 
     private void sendErrorResponse(HttpServletResponse resp, int status, String message) throws IOException {
+        ErrorResponse errorResponse = new ErrorResponse(message);
+        String json = objectMapper.writeValueAsString(errorResponse);
+
         resp.setStatus(status);
-        resp.getWriter().write(message);
+        resp.getWriter().write(json);
     }
 
 }
