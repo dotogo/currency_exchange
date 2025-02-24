@@ -2,7 +2,6 @@ package org.proj3.currency_exchange.service;
 
 import org.proj3.currency_exchange.dao.CurrencyDao;
 import org.proj3.currency_exchange.dao.ExchangeRateDao;
-import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.dto.ExchangeRateRequestDto;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.entity.CurrencyEntity;
@@ -13,7 +12,6 @@ import org.proj3.currency_exchange.util.CurrencyUtil;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,11 +86,9 @@ public class ExchangeRateService {
         CurrencyEntity targetCurrency = currencyDao.findByCode(targetCurrencyCode)
                 .orElseThrow(() -> new ExchangeRateServiceException(ERROR_FINDING_TARGET_CURRENCY));
 
-        ExchangeRateEntity rateEntity = new ExchangeRateEntity(baseCurrency, targetCurrency, exchangeRate);
-
-        ExchangeRateEntity savedEntity = exchangeRateDao.save(rateEntity);
-
-        return Optional.of(mapper.toDto(savedEntity));
+        ExchangeRateEntity rateToSave = new ExchangeRateEntity(baseCurrency, targetCurrency, exchangeRate);
+        ExchangeRateEntity savedRate = exchangeRateDao.save(rateToSave);
+        return Optional.of(mapper.toDto(savedRate));
     }
 
     private void validatePairCodeLength(String pairCode) {

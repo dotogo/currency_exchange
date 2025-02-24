@@ -114,7 +114,6 @@ public class ExchangeRatesServlet extends HttpServlet {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     private boolean isRequestParametersEmpty(Map<String, String[]> parameterMap, HttpServletResponse resp) throws IOException {

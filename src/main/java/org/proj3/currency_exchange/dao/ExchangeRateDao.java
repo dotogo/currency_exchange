@@ -6,7 +6,6 @@ import org.proj3.currency_exchange.exception.DaoException;
 import org.proj3.currency_exchange.util.DatabaseConfig;
 
 import javax.sql.DataSource;
-import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +42,9 @@ public class ExchangeRateDao {
             """;
     private static final String FINDING_ALL_ERROR = "Error while finding exchange rates.";
     private static final String FINDING_BY_CODE_PAIR_ERROR = "Error finding exchange rate by code pair.";
-//    private static final String SAVING_ERROR = "Error saving exchange rate.";
+    private static final String NO_ROWS_AFFECTED_ERROR = "Saving exchange rate failed, no rows affected.";
+    private static final String GENERATED_ID_RETRIEVING_ERROR = "Failed to retrieve generated ID.";
+    private static final String SAVING_ERROR = "Error saving exchange rate.";
 
     private ExchangeRateDao() {
     }
@@ -102,7 +103,7 @@ public class ExchangeRateDao {
             int affectedRows = preparedStatement.executeUpdate();
 
             if (affectedRows == 0) {
-                throw new DaoException("Saving exchange rate failed, no rows affected.");
+                throw new DaoException(NO_ROWS_AFFECTED_ERROR);
             }
 
             String lastIdSQL = "SELECT last_insert_rowid()";
@@ -113,15 +114,14 @@ public class ExchangeRateDao {
                 if (resultSet.next()) {
                     exchangeRate.setId(resultSet.getInt(1));
                 } else {
-                    throw new DaoException("Failed to retrieve generated ID.");
+                    throw new DaoException(GENERATED_ID_RETRIEVING_ERROR);
                 }
             }
             return exchangeRate;
         } catch (SQLException e) {
-            throw new DaoException("Error saving exchange rate.", e);
+            throw new DaoException(SAVING_ERROR, e);
         }
     }
-
 
     private ExchangeRateEntity mapRowToEntity(ResultSet resultSet) throws SQLException {
         ExchangeRateEntity rateEntity = new ExchangeRateEntity();

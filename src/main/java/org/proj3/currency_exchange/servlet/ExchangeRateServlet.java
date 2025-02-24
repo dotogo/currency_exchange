@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.proj3.currency_exchange.dto.ErrorResponse;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.service.ExchangeRateService;
 
@@ -42,13 +43,15 @@ public class ExchangeRateServlet extends HttpServlet {
                 sendResponse(resp, HttpServletResponse.SC_NOT_FOUND, EXCHANGE_RATE_NOT_FOUND);
             }
         } catch (Exception e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write(e.getMessage());
+            sendResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
     private void sendResponse(HttpServletResponse resp, int status, String message) throws IOException {
+        ErrorResponse errorResponse = new ErrorResponse(message);
+        String json = mapper.writeValueAsString(errorResponse);
+
         resp.setStatus(status);
-        resp.getWriter().write(message);
+        resp.getWriter().write(json);
     }
 }
