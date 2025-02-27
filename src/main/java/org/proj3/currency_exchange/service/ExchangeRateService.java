@@ -73,14 +73,12 @@ public class ExchangeRateService {
     public Optional<ExchangeRateResponseDto> save(ExchangeRateRequestDto requestDto) {
         BigDecimal exchangeRate = requestDto.getRate();
 
-        if (exchangeRate.scale() > 6 || exchangeRate.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalExchangeRateException(INVALID_EXCHANGE_RATE);
-        }
+        validateExchangeRateValue(exchangeRate);
 
-        String baseCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getBaseCurrencyCode());
+        String baseCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getBaseCurrencyCode());
         String targetCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getTargetCurrencyCode());
 
-        CurrencyEntity baseCurrency = currencyDao.findByCode(baseCode)
+        CurrencyEntity baseCurrency = currencyDao.findByCode(baseCurrencyCode)
                 .orElseThrow(() -> new ExchangeRateServiceException(ERROR_FINDING_BASE_CURRENCY));
 
         CurrencyEntity targetCurrency = currencyDao.findByCode(targetCurrencyCode)
@@ -91,9 +89,40 @@ public class ExchangeRateService {
         return Optional.of(mapper.toDto(savedRate));
     }
 
+    public Optional<ExchangeRateResponseDto> update(String currencyPair, BigDecimal exchangeRate) {
+        validatePairCodeLength(currencyPair);
+        validateExchangeRateValue(exchangeRate);
+
+        currencyPair = CurrencyUtil.normalizeCurrencyCode(currencyPair);
+
+        String baseCurrencyCode = currencyPair.substring(0, 3);
+        String targetCurrencyCode = currencyPair.substring(3);
+
+        CurrencyUtil.validateCurrencyCode(baseCurrencyCode);
+        CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
+
+        CurrencyEntity baseCurrency = currencyDao.findByCode(baseCurrencyCode)
+                .orElseThrow(() -> new ExchangeRateServiceException(ERROR_FINDING_BASE_CURRENCY));
+
+        CurrencyEntity targetCurrency = currencyDao.findByCode(targetCurrencyCode)
+                .orElseThrow(() -> new ExchangeRateServiceException(ERROR_FINDING_TARGET_CURRENCY));
+
+        int baseCurrencyId = baseCurrency.getId();
+        int targetCurrencyId = targetCurrency.getId();
+
+        ExchangeRateEntity updatedRate = exchangeRateDao.update(baseCurrencyId, targetCurrencyId, exchangeRate);
+        return Optional.of(mapper.toDto(updatedRate));
+    }
+
     private void validatePairCodeLength(String pairCode) {
         if (pairCode.length() != 6) {
             throw new IllegalCurrencyCodeException(INVALID_CURRENCY_PAIR_LENGTH);
+        }
+    }
+
+    private void validateExchangeRateValue(BigDecimal exchangeRate) {
+        if (exchangeRate.scale() > 6 || exchangeRate.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalExchangeRateException(INVALID_EXCHANGE_RATE);
         }
     }
 

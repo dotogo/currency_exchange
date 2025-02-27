@@ -6,6 +6,7 @@ import org.proj3.currency_exchange.exception.DaoException;
 import org.proj3.currency_exchange.util.DatabaseConfig;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,11 +41,19 @@ public class ExchangeRateDao {
             INSERT INTO exchangeRates (base_currency_id, target_currency_id, rate)
             VALUES (?, ?, ?)
             """;
+    private static final String UPDATE_SQL = """
+            UPDATE exchangeRates
+            SET rate = ?
+            WHERE base_currency_id = ? AND target_currency_id = ?
+            RETURNING *
+            """;
+
     private static final String FINDING_ALL_ERROR = "Error while finding exchange rates.";
     private static final String FINDING_BY_CODE_PAIR_ERROR = "Error finding exchange rate by code pair.";
     private static final String NO_ROWS_AFFECTED_ERROR = "Saving exchange rate failed, no rows affected.";
     private static final String GENERATED_ID_RETRIEVING_ERROR = "Failed to retrieve generated ID.";
     private static final String SAVING_ERROR = "Error saving exchange rate.";
+    private static final String UPDATE_ERROR = "Failed to update exchange rate";
 
     private ExchangeRateDao() {
     }
@@ -67,7 +76,6 @@ public class ExchangeRateDao {
         }
         return rateEntities;
     }
-
 
     public Optional<ExchangeRateEntity> findByCode(String currencyPair) {
         String baseCurrencyCode = currencyPair.substring(0, 3);
@@ -122,6 +130,42 @@ public class ExchangeRateDao {
             throw new DaoException(SAVING_ERROR, e);
         }
     }
+
+    public ExchangeRateEntity update(int baseCurrencyId, int targetCurrencyId, BigDecimal exchangeRate) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_SQL)) {
+
+            preparedStatement.setBigDecimal(1, exchangeRate);
+            preparedStatement.setInt(2, baseCurrencyId);
+            preparedStatement.setInt(3, targetCurrencyId);
+
+            int affectedRows = preparedStatement.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new DaoException(NO_ROWS_AFFECTED_ERROR);
+            }
+
+            String selectSql = """
+                    SELECT id, base_currency_id, target_currency_id, rate
+                    FROM exchangeRates
+                    WHERE base_currency_id = ? AND target_currency_id = ?
+                    """;
+
+            try (PreparedStatement statement = connection.prepareStatement(selectSql)) {
+                statement.setInt(1, baseCurrencyId);
+                statement.setInt(2, targetCurrencyId);
+                ResultSet resultSet = statement.executeQuery();
+                if (resultSet.next()) {
+                    return mapRowToEntity(resultSet);
+                } else {
+                    throw new DaoException(UPDATE_ERROR);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DaoException(UPDATE_ERROR, e);
+        }
+    }
+
 
     private ExchangeRateEntity mapRowToEntity(ResultSet resultSet) throws SQLException {
         ExchangeRateEntity rateEntity = new ExchangeRateEntity();
