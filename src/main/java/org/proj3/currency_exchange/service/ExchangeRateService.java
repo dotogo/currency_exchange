@@ -90,10 +90,10 @@ public class ExchangeRateService {
     }
 
     public Optional<ExchangeRateResponseDto> update(String currencyPair, BigDecimal exchangeRate) {
+        currencyPair = CurrencyUtil.normalizeCurrencyCode(currencyPair);
+
         validatePairCodeLength(currencyPair);
         validateExchangeRateValue(exchangeRate);
-
-        currencyPair = CurrencyUtil.normalizeCurrencyCode(currencyPair);
 
         String baseCurrencyCode = currencyPair.substring(0, 3);
         String targetCurrencyCode = currencyPair.substring(3);
@@ -115,6 +115,7 @@ public class ExchangeRateService {
     }
 
     private void validatePairCodeLength(String pairCode) {
+        System.out.println("pairCode: " + pairCode);
         if (pairCode.length() != 6) {
             throw new IllegalCurrencyCodeException(INVALID_CURRENCY_PAIR_LENGTH);
         }

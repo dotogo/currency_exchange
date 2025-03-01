@@ -37,15 +37,19 @@ public class ExchangeRateDao {
             WHERE bc.code = ? AND tc.code = ?
             """;
 
+    private static final String FIND_BY_CURRENCY_ID_WHERE = """
+            WHERE bc.id = ? AND tc.id = ?
+            """;
+
     private static final String SAVE_SQL = """
             INSERT INTO exchangeRates (base_currency_id, target_currency_id, rate)
             VALUES (?, ?, ?)
             """;
+
     private static final String UPDATE_SQL = """
             UPDATE exchangeRates
             SET rate = ?
             WHERE base_currency_id = ? AND target_currency_id = ?
-            RETURNING *
             """;
 
     private static final String FINDING_ALL_ERROR = "Error while finding exchange rates.";
@@ -53,6 +57,7 @@ public class ExchangeRateDao {
     private static final String NO_ROWS_AFFECTED_ERROR = "Saving exchange rate failed, no rows affected.";
     private static final String GENERATED_ID_RETRIEVING_ERROR = "Failed to retrieve generated ID.";
     private static final String SAVING_ERROR = "Error saving exchange rate.";
+    private static final String UPDATE_ERROR_STATEMENT = "Failed to update exchange rate. PreparedStatement.";
     private static final String UPDATE_ERROR = "Failed to update exchange rate";
 
     private ExchangeRateDao() {
@@ -140,25 +145,23 @@ public class ExchangeRateDao {
             preparedStatement.setInt(3, targetCurrencyId);
 
             int affectedRows = preparedStatement.executeUpdate();
-
             if (affectedRows == 0) {
                 throw new DaoException(NO_ROWS_AFFECTED_ERROR);
             }
 
-            String selectSql = """
-                    SELECT id, base_currency_id, target_currency_id, rate
-                    FROM exchangeRates
-                    WHERE base_currency_id = ? AND target_currency_id = ?
-                    """;
+            String selectSql = BASE_QUERY + FIND_BY_CURRENCY_ID_WHERE;
 
             try (PreparedStatement statement = connection.prepareStatement(selectSql)) {
+
                 statement.setInt(1, baseCurrencyId);
                 statement.setInt(2, targetCurrencyId);
+
                 ResultSet resultSet = statement.executeQuery();
+
                 if (resultSet.next()) {
                     return mapRowToEntity(resultSet);
                 } else {
-                    throw new DaoException(UPDATE_ERROR);
+                    throw new DaoException(UPDATE_ERROR_STATEMENT);
                 }
             }
         } catch (SQLException e) {
@@ -166,6 +169,15 @@ public class ExchangeRateDao {
         }
     }
 
+//    private void printResultSet(ResultSet resultSet) throws SQLException {
+//        ResultSetMetaData metaData = resultSet.getMetaData();
+//        int columnCount = metaData.getColumnCount();
+//
+//        for (int i = 1; i <= columnCount; i++) {
+//            System.out.println(metaData.getColumnName(i) + "\t" + resultSet.getObject(i));
+//        }
+//        System.out.println();
+//    }
 
     private ExchangeRateEntity mapRowToEntity(ResultSet resultSet) throws SQLException {
         ExchangeRateEntity rateEntity = new ExchangeRateEntity();

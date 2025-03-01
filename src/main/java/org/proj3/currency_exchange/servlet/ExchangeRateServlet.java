@@ -38,6 +38,11 @@ public class ExchangeRateServlet extends BaseServlet {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
+    public void init() throws ServletException {
+        System.out.println("ExchangeRateServlet загружен!");
+    }
+
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String unverifiedCurrencyPair = req.getPathInfo();
 
@@ -170,7 +175,12 @@ public class ExchangeRateServlet extends BaseServlet {
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        System.out.println("HTTP Method: " + req.getMethod());
-        super.service(req, resp);
+        String method = req.getMethod();
+        System.out.println("HTTP Method: " + method);
+        if (method.equals("PATCH")) {
+            this.doPatch(req, resp);
+        } else {
+            super.service(req, resp);
+        }
     }
 }
