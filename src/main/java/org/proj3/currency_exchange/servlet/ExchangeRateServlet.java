@@ -38,11 +38,6 @@ public class ExchangeRateServlet extends BaseServlet {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public void init() throws ServletException {
-        System.out.println("ExchangeRateServlet загружен!");
-    }
-
-    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String unverifiedCurrencyPair = req.getPathInfo();
 
@@ -69,6 +64,17 @@ public class ExchangeRateServlet extends BaseServlet {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, JSON_ERROR + e.getMessage());
         } catch (IOException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, IO_ERROR + e.getMessage());
+        }
+    }
+
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String method = req.getMethod();
+        System.out.println("HTTP Method: " + method);
+        if (method.equals("PATCH")) {
+            this.doPatch(req, resp);
+        } else {
+            super.service(req, resp);
         }
     }
 
@@ -171,16 +177,5 @@ public class ExchangeRateServlet extends BaseServlet {
             return true;
         }
         return false;
-    }
-
-    @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String method = req.getMethod();
-        System.out.println("HTTP Method: " + method);
-        if (method.equals("PATCH")) {
-            this.doPatch(req, resp);
-        } else {
-            super.service(req, resp);
-        }
     }
 }
