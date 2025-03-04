@@ -12,6 +12,7 @@ import org.proj3.currency_exchange.exception.CurrencyServiceException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.CurrencyService;
 import org.proj3.currency_exchange.service.ExchangeRateService;
+import org.proj3.currency_exchange.util.ExchangeUtill;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -54,8 +55,8 @@ public class ExchangeServlet extends BaseServlet {
 
             Optional<CurrencyResponseDto> baseDto = currencyService.findByCode(from);
             if (baseDto.isEmpty()) {
-               sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_CURRENCY_IN_DATABASE.formatted(from));
-               return;
+                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_CURRENCY_IN_DATABASE.formatted(from));
+                return;
             }
 
             Optional<CurrencyResponseDto> targetDto = currencyService.findByCode(to);
@@ -64,11 +65,13 @@ public class ExchangeServlet extends BaseServlet {
                 return;
             }
 
+            BigDecimal validatedAmount = ExchangeUtill.validateAmount(amount);
+
             Optional<ExchangeRateResponseDto> fromTo = rateService.findByCode(from + to);
             if (fromTo.isPresent()) {
                 ExchangeRateResponseDto rateResponseDto = fromTo.get();
                 BigDecimal rate = rateResponseDto.getRate();
-                BigDecimal convertedAmount = rate.multiply(new BigDecimal(amount));
+                BigDecimal convertedAmount = rate.multiply(validatedAmount);
                 
                 System.out.println("from: " + from + " to: " + to + " amount: " + amount);
 
@@ -76,7 +79,7 @@ public class ExchangeServlet extends BaseServlet {
                 resp.getWriter().write("from: " + from + "\nto: " + to + "\namount: " + amount + "\nconvertedAmount: " + convertedAmount);
             }
 
-        } catch (IllegalCurrencyCodeException e) {
+        } catch (IllegalCurrencyCodeException | IllegalArgumentException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (JsonProcessingException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, JSON_ERROR + e.getMessage());
