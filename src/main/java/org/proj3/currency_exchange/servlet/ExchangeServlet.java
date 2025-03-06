@@ -10,7 +10,7 @@ import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.CurrencyService;
 import org.proj3.currency_exchange.service.ExchangeRateService;
-import org.proj3.currency_exchange.util.ExchangeUtill;
+import org.proj3.currency_exchange.service.ExchangeService;
 import org.proj3.currency_exchange.util.JsonUtill;
 
 import java.io.IOException;
@@ -31,6 +31,7 @@ public class ExchangeServlet extends BaseServlet {
 
     private final ExchangeRateService rateService = ExchangeRateService.getInstance();
     private final CurrencyService currencyService = CurrencyService.getInstance();
+    private final ExchangeService exchangeService = ExchangeService.getInstance();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -64,7 +65,7 @@ public class ExchangeServlet extends BaseServlet {
                 return;
             }
 
-            BigDecimal validatedAmount = ExchangeUtill.validateAmount(amount);
+            BigDecimal validatedAmount = exchangeService.validateAmount(amount);
             CurrencyResponseDto base = baseDto.get();
             CurrencyResponseDto target = targetDto.get();
 
