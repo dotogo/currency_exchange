@@ -114,7 +114,7 @@ public class ExchangeServlet extends BaseServlet {
 
     private void sendOkResponse(HttpServletResponse resp, BigDecimal validatedAmount, CurrencyResponseDto base,
                                 CurrencyResponseDto target, BigDecimal rate) throws IOException {
-        BigDecimal convertedAmount = rate.multiply(validatedAmount).setScale(6, RoundingMode.HALF_EVEN).stripTrailingZeros();
+        BigDecimal convertedAmount = rate.multiply(validatedAmount).setScale(2, RoundingMode.HALF_EVEN).stripTrailingZeros();
         convertedAmount = new BigDecimal(convertedAmount.toPlainString());
 
         ExchangeDto exchangeDto = new ExchangeDto(base, target, rate, validatedAmount, convertedAmount);
