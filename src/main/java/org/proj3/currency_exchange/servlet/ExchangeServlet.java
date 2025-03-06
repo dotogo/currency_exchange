@@ -1,7 +1,6 @@
 package org.proj3.currency_exchange.servlet;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,6 +11,7 @@ import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.CurrencyService;
 import org.proj3.currency_exchange.service.ExchangeRateService;
 import org.proj3.currency_exchange.util.ExchangeUtill;
+import org.proj3.currency_exchange.util.JsonUtill;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -31,7 +31,6 @@ public class ExchangeServlet extends BaseServlet {
 
     private final ExchangeRateService rateService = ExchangeRateService.getInstance();
     private final CurrencyService currencyService = CurrencyService.getInstance();
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -118,7 +117,7 @@ public class ExchangeServlet extends BaseServlet {
         convertedAmount = new BigDecimal(convertedAmount.toPlainString());
 
         ExchangeDto exchangeDto = new ExchangeDto(base, target, rate, validatedAmount, convertedAmount);
-        String json = objectMapper.writeValueAsString(exchangeDto);
+        String json = JsonUtill.toJson(exchangeDto);
 
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.getWriter().write(json);

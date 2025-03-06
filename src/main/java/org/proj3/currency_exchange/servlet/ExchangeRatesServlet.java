@@ -1,17 +1,14 @@
 package org.proj3.currency_exchange.servlet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.proj3.currency_exchange.dto.CurrencyResponseDto;
-import org.proj3.currency_exchange.dto.ErrorResponse;
 import org.proj3.currency_exchange.dto.ExchangeRateRequestDto;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.*;
 import org.proj3.currency_exchange.service.ExchangeRateService;
+import org.proj3.currency_exchange.util.JsonUtill;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -31,13 +28,12 @@ public class ExchangeRatesServlet extends BaseServlet {
                                                         "Please enter a positive decimal number with no more than 6 decimal places.";
 
     private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             List<ExchangeRateResponseDto> exchangeRates = exchangeRateService.findAll();
-            String jsonResponse = objectMapper.writeValueAsString(exchangeRates);
+            String jsonResponse = JsonUtill.toJson(exchangeRates);
 
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
@@ -49,7 +45,7 @@ public class ExchangeRatesServlet extends BaseServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Map<String, String[]> parameterMap = req.getParameterMap();
 
         resp.setContentType("application/json");
@@ -103,9 +99,9 @@ public class ExchangeRatesServlet extends BaseServlet {
             Optional<ExchangeRateResponseDto> savedDtoOptional = exchangeRateService.save(requestDto);
             if (savedDtoOptional.isPresent()) {
                 ExchangeRateResponseDto rateResponseDto = savedDtoOptional.get();
-                String responseAsString = objectMapper.writeValueAsString(rateResponseDto);
+                String json = JsonUtill.toJson(rateResponseDto);
                 resp.setStatus(HttpServletResponse.SC_CREATED);
-                resp.getWriter().write(responseAsString);
+                resp.getWriter().write(json);
             }
 
         } catch (IllegalExchangeRateException | ExchangeRateServiceException e) {

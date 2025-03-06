@@ -1,7 +1,6 @@
 package org.proj3.currency_exchange.servlet;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +9,7 @@ import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.ExchangeRateServiceException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.ExchangeRateService;
+import org.proj3.currency_exchange.util.JsonUtill;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,7 +35,6 @@ public class ExchangeRateServlet extends BaseServlet {
     private static final String ERROR_READING_REQUEST_BODY = "Error reading request body";
 
     private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
-    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -52,9 +51,9 @@ public class ExchangeRateServlet extends BaseServlet {
             Optional<ExchangeRateResponseDto> dtoOptional = exchangeRateService.findByCode(unverifiedCurrencyPair);
             if (dtoOptional.isPresent()) {
                 ExchangeRateResponseDto responseDto = dtoOptional.get();
-                String responseAsString = mapper.writeValueAsString(responseDto);
+                String json = JsonUtill.toJson(responseDto);
                 resp.setStatus(HttpServletResponse.SC_OK);
-                resp.getWriter().write(responseAsString);
+                resp.getWriter().write(json);
             } else {
                 sendErrorResponse(resp, HttpServletResponse.SC_NOT_FOUND, EXCHANGE_RATE_NOT_FOUND);
             }
@@ -79,7 +78,7 @@ public class ExchangeRateServlet extends BaseServlet {
     }
 
     @Override
-    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
@@ -131,7 +130,7 @@ public class ExchangeRateServlet extends BaseServlet {
             Optional<ExchangeRateResponseDto> updatedRateDtoOptional = exchangeRateService.update(currencyPair, exchangeRate);
             if (updatedRateDtoOptional.isPresent()) {
                 ExchangeRateResponseDto responseDto = updatedRateDtoOptional.get();
-                String json = mapper.writeValueAsString(responseDto);
+                String json = JsonUtill.toJson(responseDto);
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.getWriter().write(json);
             } else {

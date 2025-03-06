@@ -1,17 +1,14 @@
 package org.proj3.currency_exchange.servlet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.dto.CurrencyRequestDto;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
-import org.proj3.currency_exchange.entity.CurrencyEntity;
 import org.proj3.currency_exchange.exception.*;
-import org.proj3.currency_exchange.mapper.CurrencyMapper;
 import org.proj3.currency_exchange.service.CurrencyService;
+import org.proj3.currency_exchange.util.JsonUtill;
 
 import java.io.IOException;
 import java.util.List;
@@ -21,14 +18,12 @@ import java.util.Optional;
 @WebServlet("/currencies")
 public class CurrenciesServlet extends HttpServlet {
     private final CurrencyService currencyService = CurrencyService.getInstance();
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             List<CurrencyResponseDto> currencies = currencyService.findAll();
-            String jsonResponse = objectMapper.writeValueAsString(currencies);
+            String jsonResponse = JsonUtill.toJson(currencies);
 
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
@@ -41,7 +36,7 @@ public class CurrenciesServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Map<String, String[]> parameterMap = req.getParameterMap();
 
         if (!parameterMap.containsKey("name") || !parameterMap.containsKey("code") || !parameterMap.containsKey("sign")) {
@@ -91,7 +86,7 @@ public class CurrenciesServlet extends HttpServlet {
             Optional<CurrencyResponseDto> savedDtoOptional = currencyService.save(requestDto);
             if (savedDtoOptional.isPresent()) {
                 CurrencyResponseDto currencyResponseDto = savedDtoOptional.get();
-                String responseAsString = objectMapper.writeValueAsString(currencyResponseDto);
+                String responseAsString = JsonUtill.toJson(currencyResponseDto);
                 resp.setStatus(HttpServletResponse.SC_CREATED);
                 resp.getWriter().write(responseAsString);
             }
