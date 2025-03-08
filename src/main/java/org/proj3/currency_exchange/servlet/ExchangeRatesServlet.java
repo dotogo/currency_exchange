@@ -24,8 +24,10 @@ public class ExchangeRatesServlet extends BaseServlet {
     private static final String EMPTY_TARGET_CURRENCY_CODE = "Target currency code cannot be empty.";
     private static final String EMPTY_RATE = "Rate cannot be empty.";
     private static final String PAIR_ALREADY_EXISTS = "The currency pair already exists.";
-    private static final String INVALID_EXCHANGE_RATE = "Invalid exchange rate. " +
-                                                        "Please enter a positive decimal number with no more than 6 decimal places.";
+    private static final String INVALID_EXCHANGE_RATE = "The exchange rate is not a number. Enter a positive number.";
+    private static final String BASE_CURRENCY_PARAMETER = "baseCurrencyCode";
+    private static final String TARGET_CURRENCY_PARAMETER = "targetCurrencyCode";
+    private static final String RATE_PARAMETER = "rate";
 
     private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
 
@@ -46,33 +48,18 @@ public class ExchangeRatesServlet extends BaseServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        Map<String, String[]> parameterMap = req.getParameterMap();
-
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
-        if (!parameterMap.containsKey("baseCurrencyCode") ||
-            !parameterMap.containsKey("targetCurrencyCode") ||
-            !parameterMap.containsKey("rate")) {
-            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, FIELD_IS_MISSING);
+        if (isParametersInvalid(req, resp)) {
             return;
         }
 
-        if (isRequestParametersEmpty(parameterMap, resp)) {
-            return;
-        }
+        String baseCurrencyCode = req.getParameter(BASE_CURRENCY_PARAMETER);
+        String targetCurrencyCode = req.getParameter(TARGET_CURRENCY_PARAMETER);
+        String parameterRate = req.getParameter(RATE_PARAMETER);
 
-        String baseCurrencyCode = parameterMap.get("baseCurrencyCode")[0];
-        String targetCurrencyCode = parameterMap.get("targetCurrencyCode")[0];
-        String parameterRate = parameterMap.get("rate")[0];
-
-        BigDecimal exchangeRate;
-        try {
-            exchangeRate = new BigDecimal(parameterRate);
-        } catch (NumberFormatException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INVALID_EXCHANGE_RATE);
-            return;
-        }
+        BigDecimal exchangeRate = exchangeRateService.validateExchangeRate(parameterRate);
 
         try {
             String currencyPair = baseCurrencyCode + targetCurrencyCode;
@@ -81,7 +68,7 @@ public class ExchangeRatesServlet extends BaseServlet {
                 sendErrorResponse(resp, HttpServletResponse.SC_CONFLICT, PAIR_ALREADY_EXISTS);
                 return;
             }
-        } catch (IllegalCurrencyCodeException e) {
+        } catch (IllegalCurrencyCodeException | IllegalExchangeRateException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             return;
 
@@ -112,10 +99,32 @@ public class ExchangeRatesServlet extends BaseServlet {
         }
     }
 
-    private boolean isRequestParametersEmpty(Map<String, String[]> parameterMap, HttpServletResponse resp) throws IOException {
-        String base = parameterMap.get("baseCurrencyCode")[0];
-        String target = parameterMap.get("targetCurrencyCode")[0];
-        String rate = parameterMap.get("rate")[0];
+    private boolean isRequestParameterNamesInvalid(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        Map<String, String[]> parameterMap = req.getParameterMap();
+
+        if (!parameterMap.containsKey(BASE_CURRENCY_PARAMETER) ||
+            !parameterMap.containsKey(TARGET_CURRENCY_PARAMETER) ||
+            !parameterMap.containsKey(RATE_PARAMETER)) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, FIELD_IS_MISSING);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isRateNotNumber(String parameterRate, HttpServletResponse resp) throws IOException {
+        try {
+            new BigDecimal(parameterRate);
+            return false;
+        } catch (NumberFormatException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INVALID_EXCHANGE_RATE);
+            return true;
+        }
+    }
+
+    private boolean isRequestParametersEmpty(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String base = req.getParameter(BASE_CURRENCY_PARAMETER);
+        String target = req.getParameter(TARGET_CURRENCY_PARAMETER);
+        String rate = req.getParameter(RATE_PARAMETER);
 
         if (base == null || base.trim().isEmpty()) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, EMPTY_BASE_CURRENCY_CODE);
@@ -132,6 +141,12 @@ public class ExchangeRatesServlet extends BaseServlet {
             return true;
         }
         return false;
+    }
+
+    private boolean isParametersInvalid(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        return isRequestParameterNamesInvalid(req, resp)
+               || isRequestParametersEmpty(req, resp)
+               || isRateNotNumber(req.getParameter(RATE_PARAMETER), resp);
     }
 
 }

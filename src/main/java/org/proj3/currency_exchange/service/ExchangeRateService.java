@@ -9,6 +9,7 @@ import org.proj3.currency_exchange.entity.ExchangeRateEntity;
 import org.proj3.currency_exchange.exception.*;
 import org.proj3.currency_exchange.mapper.ExchangeRateMapper;
 import org.proj3.currency_exchange.util.CurrencyUtil;
+import org.proj3.currency_exchange.util.ExchangeUtil;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -27,6 +28,12 @@ public class ExchangeRateService {
                                                         "Please enter a positive decimal number with no more than 6 decimal places.";
     private static final String ERROR_FINDING_BASE_CURRENCY = "Database error. Base currency is not available.";
     private static final String ERROR_FINDING_TARGET_CURRENCY = "Database error. Target currency is not available.";
+
+    private static final String RATE_ERROR_MESSAGE = "Please enter a valid rate: a number greater than 0," +
+                                                     " less than a million, no more than 6 decimal places.";
+
+    private static final int MAX_RATE_INTEGER_DIGITS = 6;
+    private static final int MAX_RATE_FRACTIONAL_DIGITS = 6;
 
     private final ExchangeRateMapper mapper = ExchangeRateMapper.getInstance();
 
@@ -112,6 +119,16 @@ public class ExchangeRateService {
 
         ExchangeRateEntity updatedRate = exchangeRateDao.update(baseCurrencyId, targetCurrencyId, exchangeRate);
         return Optional.of(mapper.toDto(updatedRate));
+    }
+
+    public BigDecimal validateExchangeRate(String rate) {
+        try {
+            return ExchangeUtil.validatePositiveNumber(rate,MAX_RATE_INTEGER_DIGITS, MAX_RATE_FRACTIONAL_DIGITS, RATE_ERROR_MESSAGE);
+
+        } catch (IllegalArgumentException e) {
+            throw new IllegalExchangeRateException(e.getMessage());
+        }
+
     }
 
     private void validatePairCodeLength(String pairCode) {
