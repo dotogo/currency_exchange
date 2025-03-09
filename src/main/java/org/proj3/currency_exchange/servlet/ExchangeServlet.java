@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.dto.ExchangeDto;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
+import org.proj3.currency_exchange.exception.ExchangeServiceException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.CurrencyService;
 import org.proj3.currency_exchange.service.ExchangeRateService;
@@ -103,7 +104,7 @@ public class ExchangeServlet extends BaseServlet {
                 sendOkResponse(resp, validatedAmount, base, target, rate);
             }
 
-        } catch (IllegalCurrencyCodeException | IllegalArgumentException e) {
+        } catch (IllegalCurrencyCodeException | ExchangeServiceException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (JsonProcessingException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, JSON_ERROR + e.getMessage());

@@ -29,7 +29,7 @@ public class ExchangeService {
                     .setScale(2, RoundingMode.HALF_EVEN);
 
         } catch (IllegalArgumentException e) {
-            throw new ExchangeServiceException(e.getMessage(), e);
+            throw new ExchangeServiceException(e.getMessage());
         }
     }
 }
