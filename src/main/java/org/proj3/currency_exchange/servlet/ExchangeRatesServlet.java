@@ -59,9 +59,10 @@ public class ExchangeRatesServlet extends BaseServlet {
         String targetCurrencyCode = req.getParameter(TARGET_CURRENCY_PARAMETER);
         String parameterRate = req.getParameter(RATE_PARAMETER);
 
-        BigDecimal exchangeRate = exchangeRateService.validateExchangeRate(parameterRate);
+        BigDecimal exchangeRate;
 
         try {
+            exchangeRate = exchangeRateService.validateExchangeRate(parameterRate);
             String currencyPair = baseCurrencyCode + targetCurrencyCode;
             Optional<ExchangeRateResponseDto> dtoOptional = exchangeRateService.findByCode(currencyPair);
             if (dtoOptional.isPresent()) {

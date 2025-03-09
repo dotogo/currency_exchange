@@ -126,8 +126,7 @@ public class ExchangeRateService {
             return ExchangeUtil.validatePositiveNumber(rate,MAX_RATE_INTEGER_DIGITS, MAX_RATE_FRACTIONAL_DIGITS, RATE_ERROR_MESSAGE);
 
         } catch (IllegalArgumentException e) {
-//            throw new IllegalExchangeRateException(e.getMessage());
-            throw new IllegalExchangeRateException(" --------- error exchange rate    ------------");
+            throw new IllegalExchangeRateException(e.getMessage());
         }
 
     }
