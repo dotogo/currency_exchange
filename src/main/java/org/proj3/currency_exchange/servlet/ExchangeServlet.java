@@ -17,8 +17,10 @@ import org.proj3.currency_exchange.util.JsonUtill;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @WebServlet("/exchange")
 public class ExchangeServlet extends BaseServlet {
@@ -29,6 +31,12 @@ public class ExchangeServlet extends BaseServlet {
     private static final String NO_CURRENCY_IN_DATABASE = "Currency with code %s is not in the database. Please add currency before conversion.";
     private static final String JSON_ERROR = "Error processing JSON. ";
     private static final String IO_ERROR = "Input/output data error. ";
+
+    private static final String PARAMETER_FROM = "from";
+    private static final String PARAMETER_TO = "to";
+    private static final String PARAMETER_AMOUNT = "amount";
+
+    private static final int DECIMAL_PLACES = 6;
 
     private final ExchangeRateService rateService = ExchangeRateService.getInstance();
     private final CurrencyService currencyService = CurrencyService.getInstance();
@@ -42,17 +50,25 @@ public class ExchangeServlet extends BaseServlet {
         Map<String, String[]> parameterMap = req.getParameterMap();
 
         try {
-            if (isParameterNamesInvalid(resp, parameterMap)) {
+            Set<String> validParameterNames = Set.of(PARAMETER_FROM, PARAMETER_TO, PARAMETER_AMOUNT);
+
+            if (isParameterNamesInvalid(parameterMap, validParameterNames)) {
+                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, REQUIRED_PARAMETERS_MISSING);
                 return;
             }
 
-            if(isParametersEmpty(resp, parameterMap)) {
-                return;
+            List<ParameterCheck> paramsToCheck = getParametersToCheck(parameterMap);
+
+            for (ParameterCheck parameter : paramsToCheck) {
+                if (parameter.isEmpty()) {
+                    sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, parameter.errorMessage());
+                    return;
+                }
             }
 
-            String from = req.getParameter("from");
-            String to = req.getParameter("to");
-            String amount = req.getParameter("amount");
+            String from = paramsToCheck.get(0).value();
+            String to = paramsToCheck.get(1).value();
+            String amount = paramsToCheck.get(2).value();
 
             Optional<CurrencyResponseDto> baseDto = currencyService.findByCode(from);
             if (baseDto.isEmpty()) {
@@ -84,7 +100,7 @@ public class ExchangeServlet extends BaseServlet {
             Optional<ExchangeRateResponseDto> toFrom = rateService.findByCode(to + from);
             if (toFrom.isPresent()) {
                 ExchangeRateResponseDto rateResponseDto = toFrom.get();
-                BigDecimal rate = BigDecimal.ONE.divide(rateResponseDto.getRate(), 6, RoundingMode.HALF_EVEN);
+                BigDecimal rate = BigDecimal.ONE.divide(rateResponseDto.getRate(), DECIMAL_PLACES, RoundingMode.HALF_EVEN);
                 sendOkResponse(resp, validatedAmount, base, target, rate);
                 return;
             }
@@ -115,6 +131,7 @@ public class ExchangeServlet extends BaseServlet {
 
     private void sendOkResponse(HttpServletResponse resp, BigDecimal validatedAmount, CurrencyResponseDto base,
                                 CurrencyResponseDto target, BigDecimal rate) throws IOException {
+
         BigDecimal convertedAmount = rate.multiply(validatedAmount).setScale(2, RoundingMode.HALF_EVEN).stripTrailingZeros();
         convertedAmount = new BigDecimal(convertedAmount.toPlainString());
 
@@ -125,35 +142,22 @@ public class ExchangeServlet extends BaseServlet {
         resp.getWriter().write(json);
     }
 
-    private boolean isParameterNamesInvalid(HttpServletResponse resp, Map<String, String[]> parameterMap) throws IOException {
-        if (!parameterMap.containsKey("from") || !parameterMap.containsKey("to") || !parameterMap.containsKey("amount")) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write(REQUIRED_PARAMETERS_MISSING);
-            return true;
-        }
-        return false;
+    private boolean isParameterNamesInvalid(Map<String, String[]> parameters, Set<String> parametersNames) {
+        return !parameters.keySet().containsAll(parametersNames);
     }
 
-    private boolean isParametersEmpty(HttpServletResponse resp, Map<String, String[]> parameterMap) throws IOException {
-        String from = parameterMap.get("from")[0];
-        String to = parameterMap.get("to")[0];
-        String amount = parameterMap.get("amount")[0];
+    private List<ParameterCheck> getParametersToCheck(Map<String, String[]> parameterMap) {
+        return List.of(
+                new ParameterCheck(PARAMETER_FROM, parameterMap.get(PARAMETER_FROM)[0], FROM_FIELD_EMPTY),
+                new ParameterCheck(PARAMETER_TO, parameterMap.get(PARAMETER_TO)[0], TO_FIELD_EMPTY),
+                new ParameterCheck(PARAMETER_AMOUNT, parameterMap.get(PARAMETER_AMOUNT)[0], AMOUNT_FIELD_EMPTY)
+        );
+    }
 
-        if (from == null || from.trim().isEmpty()) {
-            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, FROM_FIELD_EMPTY);
-            return true;
+    private record ParameterCheck(String name, String value, String errorMessage) {
+        private boolean isEmpty() {
+            return value == null || value.isEmpty();
         }
-
-        if (to == null || to.trim().isEmpty()) {
-            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, TO_FIELD_EMPTY);
-            return true;
-        }
-
-        if (amount == null || amount.trim().isEmpty()) {
-            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, AMOUNT_FIELD_EMPTY);
-            return true;
-        }
-        return false;
     }
 
 }
