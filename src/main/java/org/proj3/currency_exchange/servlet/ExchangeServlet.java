@@ -29,6 +29,9 @@ public class ExchangeServlet extends BaseServlet {
     private static final String AMOUNT_FIELD_EMPTY = "The \"amount\" field is empty. Please specify the amount.";
     private static final String REQUIRED_PARAMETERS_MISSING = "A required parameter is missing.";
     private static final String NO_CURRENCY_IN_DATABASE = "Currency with code %s is not in the database. Please add currency before conversion.";
+    private static final String NO_EXCHANGE_RATES_IN_DATABASE = "Currency exchange is not available. " +
+                                                                "There is no direct, reverse or cross exchange rate (via USD) in the database.";
+    private static final String CURRENCY_FOR_CROSS_RATE = "USD";
     private static final String JSON_ERROR = "Error processing JSON. ";
     private static final String IO_ERROR = "Input/output data error. ";
 
@@ -107,8 +110,8 @@ public class ExchangeServlet extends BaseServlet {
 
             // A--->B
             // In the ExchangeRates table there are currency pairs USD-A and USD-B - we calculate the AB rate from these rates
-            Optional<ExchangeRateResponseDto> usdFrom = rateService.findByCode("USD" + from);
-            Optional<ExchangeRateResponseDto> usdTo = rateService.findByCode("USD" + to);
+            Optional<ExchangeRateResponseDto> usdFrom = rateService.findByCode(CURRENCY_FOR_CROSS_RATE + from);
+            Optional<ExchangeRateResponseDto> usdTo = rateService.findByCode(CURRENCY_FOR_CROSS_RATE + to);
             if (usdFrom.isPresent() && usdTo.isPresent()) {
                 ExchangeRateResponseDto usdFromRateDto = usdFrom.get();
                 BigDecimal usdFromRate = usdFromRateDto.getRate();
@@ -118,6 +121,8 @@ public class ExchangeServlet extends BaseServlet {
 
                 BigDecimal rate = usdToRate.divide(usdFromRate, 6, RoundingMode.HALF_EVEN);
                 sendOkResponse(resp, validatedAmount, base, target, rate);
+            }     else {
+                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_EXCHANGE_RATES_IN_DATABASE);
             }
 
         } catch (IllegalCurrencyCodeException | ExchangeServiceException e) {
