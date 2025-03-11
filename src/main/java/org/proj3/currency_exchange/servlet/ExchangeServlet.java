@@ -17,10 +17,8 @@ import org.proj3.currency_exchange.util.JsonUtill;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @WebServlet("/exchange")
 public class ExchangeServlet extends BaseServlet {
@@ -52,23 +50,10 @@ public class ExchangeServlet extends BaseServlet {
         resp.setCharacterEncoding("UTF-8");
 
         Map<String, String[]> parameterMap = req.getParameterMap();
+        List<ParameterCheck> paramsToCheck = getParametersToCheck(parameterMap);
 
         try {
-            Set<String> validParameterNames = Set.of(PARAMETER_FROM, PARAMETER_TO, PARAMETER_AMOUNT);
-
-            if (isParameterNamesInvalid(parameterMap, validParameterNames)) {
-                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, REQUIRED_PARAMETERS_MISSING);
-                return;
-            }
-
-            List<ParameterCheck> paramsToCheck = getParametersToCheck(parameterMap);
-
-            for (ParameterCheck parameter : paramsToCheck) {
-                if (parameter.isEmpty()) {
-                    sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, parameter.errorMessage());
-                    return;
-                }
-            }
+            checkParameterNamesAndEmptyValue(paramsToCheck, resp);
 
             String from = paramsToCheck.get(0).value();
             String to = paramsToCheck.get(1).value();
@@ -109,6 +94,22 @@ public class ExchangeServlet extends BaseServlet {
         }
     }
 
+    private void checkParameterNamesAndEmptyValue(List<ParameterCheck> parametersToCheck, HttpServletResponse resp) throws IOException {
+        Set<String> validParameterNames = Set.of(PARAMETER_FROM, PARAMETER_TO, PARAMETER_AMOUNT);
+
+        if (isParameterNamesInvalid(parametersToCheck, validParameterNames)) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, REQUIRED_PARAMETERS_MISSING);
+            return;
+        }
+
+        for (ExchangeServlet.ParameterCheck parameter : parametersToCheck) {
+            if (parameter.isEmpty()) {
+                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, parameter.errorMessage());
+                return;
+            }
+        }
+    }
+
     private void sendOkResponse(HttpServletResponse resp, BigDecimal validatedAmount, CurrencyResponseDto base,
                                 CurrencyResponseDto target, BigDecimal rate) throws IOException {
 
@@ -122,8 +123,11 @@ public class ExchangeServlet extends BaseServlet {
         resp.getWriter().write(json);
     }
 
-    private boolean isParameterNamesInvalid(Map<String, String[]> parameters, Set<String> parametersNames) {
-        return !parameters.keySet().containsAll(parametersNames);
+    private boolean isParameterNamesInvalid(List<ParameterCheck> paramsToCheck, Set<String> parametersNames) {
+        return !paramsToCheck.stream()
+                .map(ParameterCheck::name)
+                .collect(Collectors.toSet())
+                .containsAll(parametersNames);
     }
 
     private List<ParameterCheck> getParametersToCheck(Map<String, String[]> parameterMap) {
