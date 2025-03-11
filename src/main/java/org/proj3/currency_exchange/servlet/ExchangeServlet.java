@@ -31,7 +31,7 @@ public class ExchangeServlet extends BaseServlet {
     private static final String NO_CURRENCY_IN_DATABASE = "Currency with code %s is not in the database. Please add currency before conversion.";
     private static final String NO_EXCHANGE_RATES_IN_DATABASE = "Currency exchange is not available. " +
                                                                 "There is no direct, reverse or cross exchange rate (via USD) in the database.";
-    private static final String CURRENCY_FOR_CROSS_RATE = "USD";
+    private static final String USD = "USD";
     private static final String JSON_ERROR = "Error processing JSON. ";
     private static final String IO_ERROR = "Input/output data error. ";
 
@@ -40,6 +40,7 @@ public class ExchangeServlet extends BaseServlet {
     private static final String PARAMETER_AMOUNT = "amount";
 
     private static final int DECIMAL_PLACES = 6;
+    private static final int CONVERTED_AMOUNT_SCALE = 2;
 
     private final ExchangeRateService rateService = ExchangeRateService.getInstance();
     private final CurrencyService currencyService = CurrencyService.getInstance();
@@ -89,39 +90,13 @@ public class ExchangeServlet extends BaseServlet {
             CurrencyResponseDto base = baseDto.get();
             CurrencyResponseDto target = targetDto.get();
 
-            // A--->B
-            // In the ExchangeRates table there is a currency pair AB - we take its rate
-            Optional<ExchangeRateResponseDto> fromTo = rateService.findByCode(from + to);
-            if (fromTo.isPresent()) {
-                ExchangeRateResponseDto rateResponseDto = fromTo.get();
-                BigDecimal rate = rateResponseDto.getRate();
-                sendOkResponse(resp, validatedAmount, base, target, rate);
-            }
+            Optional<BigDecimal> rate = getDirectRate(from, to)
+                                        .or(() -> getReverseRate(from, to)
+                                        .or(() -> getCrossRate(from, to)));
 
-            // A--->B
-            // In the ExchangeRates table there is a currency pair BA - we take its rate and calculate the reverse to get AB
-            Optional<ExchangeRateResponseDto> toFrom = rateService.findByCode(to + from);
-            if (toFrom.isPresent()) {
-                ExchangeRateResponseDto rateResponseDto = toFrom.get();
-                BigDecimal rate = BigDecimal.ONE.divide(rateResponseDto.getRate(), DECIMAL_PLACES, RoundingMode.HALF_EVEN);
-                sendOkResponse(resp, validatedAmount, base, target, rate);
-                return;
-            }
-
-            // A--->B
-            // In the ExchangeRates table there are currency pairs USD-A and USD-B - we calculate the AB rate from these rates
-            Optional<ExchangeRateResponseDto> usdFrom = rateService.findByCode(CURRENCY_FOR_CROSS_RATE + from);
-            Optional<ExchangeRateResponseDto> usdTo = rateService.findByCode(CURRENCY_FOR_CROSS_RATE + to);
-            if (usdFrom.isPresent() && usdTo.isPresent()) {
-                ExchangeRateResponseDto usdFromRateDto = usdFrom.get();
-                BigDecimal usdFromRate = usdFromRateDto.getRate();
-
-                ExchangeRateResponseDto usdToRateDto = usdTo.get();
-                BigDecimal usdToRate = usdToRateDto.getRate();
-
-                BigDecimal rate = usdToRate.divide(usdFromRate, 6, RoundingMode.HALF_EVEN);
-                sendOkResponse(resp, validatedAmount, base, target, rate);
-            }     else {
+            if (rate.isPresent()) {
+                sendOkResponse(resp, validatedAmount, base, target, rate.get());
+            } else {
                 sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_EXCHANGE_RATES_IN_DATABASE);
             }
 
@@ -137,7 +112,7 @@ public class ExchangeServlet extends BaseServlet {
     private void sendOkResponse(HttpServletResponse resp, BigDecimal validatedAmount, CurrencyResponseDto base,
                                 CurrencyResponseDto target, BigDecimal rate) throws IOException {
 
-        BigDecimal convertedAmount = rate.multiply(validatedAmount).setScale(2, RoundingMode.HALF_EVEN).stripTrailingZeros();
+        BigDecimal convertedAmount = rate.multiply(validatedAmount).setScale(CONVERTED_AMOUNT_SCALE, RoundingMode.HALF_EVEN).stripTrailingZeros();
         convertedAmount = new BigDecimal(convertedAmount.toPlainString());
 
         ExchangeDto exchangeDto = new ExchangeDto(base, target, rate, validatedAmount, convertedAmount);
@@ -157,6 +132,51 @@ public class ExchangeServlet extends BaseServlet {
                 new ParameterCheck(PARAMETER_TO, parameterMap.get(PARAMETER_TO)[0], TO_FIELD_EMPTY),
                 new ParameterCheck(PARAMETER_AMOUNT, parameterMap.get(PARAMETER_AMOUNT)[0], AMOUNT_FIELD_EMPTY)
         );
+    }
+
+    private Optional<BigDecimal> getDirectRate(String from, String to) {
+        // A--->B
+        // In the ExchangeRates table there is a currency pair AB - we take its rate
+        Optional<ExchangeRateResponseDto> fromTo = rateService.findByCode(from + to);
+        if (fromTo.isPresent()) {
+            ExchangeRateResponseDto rateResponseDto = fromTo.get();
+            BigDecimal rate = rateResponseDto.getRate();
+            return Optional.of(rate);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<BigDecimal> getReverseRate(String from, String to) {
+        // A--->B
+        // In the ExchangeRates table there is a currency pair BA - we take its rate and calculate the reverse to get AB
+        Optional<ExchangeRateResponseDto> toFrom = rateService.findByCode(to + from);
+        if (toFrom.isPresent()) {
+            ExchangeRateResponseDto rateResponseDto = toFrom.get();
+            BigDecimal rate = BigDecimal.ONE.divide(rateResponseDto.getRate(), DECIMAL_PLACES, RoundingMode.HALF_EVEN);
+            return Optional.of(rate);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<BigDecimal> getCrossRate(String from, String to) {
+        // A--->B
+        // In the ExchangeRates table there are currency pairs USD-A and USD-B - we calculate the AB rate from these rates
+        Optional<ExchangeRateResponseDto> usdFrom = rateService.findByCode(USD + from);
+        Optional<ExchangeRateResponseDto> usdTo = rateService.findByCode(USD + to);
+        if (usdFrom.isPresent() && usdTo.isPresent()) {
+            ExchangeRateResponseDto usdFromRateDto = usdFrom.get();
+            BigDecimal usdFromRate = usdFromRateDto.getRate();
+
+            ExchangeRateResponseDto usdToRateDto = usdTo.get();
+            BigDecimal usdToRate = usdToRateDto.getRate();
+
+            BigDecimal rate = usdToRate.divide(usdFromRate, 6, RoundingMode.HALF_EVEN);
+            return Optional.of(rate);
+        } else {
+            return Optional.empty();
+        }
     }
 
     private record ParameterCheck(String name, String value, String errorMessage) {
