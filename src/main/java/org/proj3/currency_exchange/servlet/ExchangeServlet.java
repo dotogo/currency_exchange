@@ -53,11 +53,19 @@ public class ExchangeServlet extends BaseServlet {
         List<ParameterCheck> paramsToCheck = getParametersToCheck(parameterMap);
 
         try {
-            checkParameterNamesAndEmptyValue(paramsToCheck, resp);
+            if (sendErrorIfParameterNameInvalid(paramsToCheck, resp)) {
+                return;
+            }
+
+            if (sendErrorIfParameterEmpty(paramsToCheck, resp)) {
+                return;
+            }
 
             String from = paramsToCheck.get(0).value();
             String to = paramsToCheck.get(1).value();
             String amount = paramsToCheck.get(2).value();
+
+            System.out.println("String after checking");
 
             Optional<CurrencyResponseDto> baseDto = currencyService.findByCode(from);
             if (baseDto.isEmpty()) {
@@ -94,20 +102,24 @@ public class ExchangeServlet extends BaseServlet {
         }
     }
 
-    private void checkParameterNamesAndEmptyValue(List<ParameterCheck> parametersToCheck, HttpServletResponse resp) throws IOException {
+    private boolean sendErrorIfParameterNameInvalid(List<ParameterCheck> parametersToCheck, HttpServletResponse resp) throws IOException {
         Set<String> validParameterNames = Set.of(PARAMETER_FROM, PARAMETER_TO, PARAMETER_AMOUNT);
 
         if (isParameterNamesInvalid(parametersToCheck, validParameterNames)) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, REQUIRED_PARAMETERS_MISSING);
-            return;
+            return true;
         }
+        return false;
+    }
 
-        for (ExchangeServlet.ParameterCheck parameter : parametersToCheck) {
+    private boolean sendErrorIfParameterEmpty(List<ParameterCheck> parametersToCheck, HttpServletResponse resp) throws IOException {
+        for (ParameterCheck parameter : parametersToCheck) {
             if (parameter.isEmpty()) {
                 sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, parameter.errorMessage());
-                return;
+                return true;
             }
         }
+        return false;
     }
 
     private void sendOkResponse(HttpServletResponse resp, BigDecimal validatedAmount, CurrencyResponseDto base,
