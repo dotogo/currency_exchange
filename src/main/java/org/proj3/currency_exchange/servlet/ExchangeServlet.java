@@ -26,7 +26,7 @@ public class ExchangeServlet extends BaseServlet {
     private static final String TO_FIELD_EMPTY = "The \"to\" field is empty. Please provide the target currency code.";
     private static final String AMOUNT_FIELD_EMPTY = "The \"amount\" field is empty. Please specify the amount.";
     private static final String REQUIRED_PARAMETERS_MISSING = "A required parameter is missing.";
-    private static final String NO_CURRENCY_IN_DATABASE = "Currency with code %s is not in the database. Please add currency before conversion.";
+    private static final String NO_CURRENCY_IN_DATABASE = "Currency with code \"%s\" is not in the database. Please add currency before conversion.";
     private static final String NO_EXCHANGE_RATES_IN_DATABASE = "Currency exchange is not available. " +
                                                                 "There is no direct, reverse or cross exchange rate (via USD) in the database.";
     private static final String USD = "USD";
@@ -67,13 +67,13 @@ public class ExchangeServlet extends BaseServlet {
 
             Optional<CurrencyResponseDto> baseDto = currencyService.findByCode(from);
             if (baseDto.isEmpty()) {
-                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_CURRENCY_IN_DATABASE.formatted(from));
+                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_CURRENCY_IN_DATABASE.formatted(from.toUpperCase()));
                 return;
             }
 
             Optional<CurrencyResponseDto> targetDto = currencyService.findByCode(to);
             if (targetDto.isEmpty()) {
-                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_CURRENCY_IN_DATABASE.formatted(to));
+                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_CURRENCY_IN_DATABASE.formatted(to.toUpperCase()));
                 return;
             }
 
