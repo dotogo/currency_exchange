@@ -65,8 +65,6 @@ public class ExchangeServlet extends BaseServlet {
             String to = paramsToCheck.get(1).value();
             String amount = paramsToCheck.get(2).value();
 
-            System.out.println("String after checking");
-
             Optional<CurrencyResponseDto> baseDto = currencyService.findByCode(from);
             if (baseDto.isEmpty()) {
                 sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_CURRENCY_IN_DATABASE.formatted(from));
@@ -88,7 +86,8 @@ public class ExchangeServlet extends BaseServlet {
                                         .or(() -> getCrossRate(from, to)));
 
             if (rate.isPresent()) {
-                sendOkResponse(resp, validatedAmount, base, target, rate.get());
+                ExchangeDto exchangeDto = createDtoForOkResponse(validatedAmount, base, target, rate.get());
+                sendOkResponse(resp, exchangeDto);
             } else {
                 sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_EXCHANGE_RATES_IN_DATABASE);
             }
@@ -122,17 +121,28 @@ public class ExchangeServlet extends BaseServlet {
         return false;
     }
 
-    private void sendOkResponse(HttpServletResponse resp, BigDecimal validatedAmount, CurrencyResponseDto base,
-                                CurrencyResponseDto target, BigDecimal rate) throws IOException {
-
-        BigDecimal convertedAmount = rate.multiply(validatedAmount).setScale(CONVERTED_AMOUNT_SCALE, RoundingMode.HALF_EVEN).stripTrailingZeros();
-        convertedAmount = new BigDecimal(convertedAmount.toPlainString());
-
-        ExchangeDto exchangeDto = new ExchangeDto(base, target, rate, validatedAmount, convertedAmount);
+    private void sendOkResponse(HttpServletResponse resp, ExchangeDto exchangeDto) throws IOException {
         String json = JsonUtill.toJson(exchangeDto);
 
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.getWriter().write(json);
+    }
+
+    private BigDecimal calculateConvertedAmount(BigDecimal rate, BigDecimal validatedAmount ) {
+        return new BigDecimal(
+                rate.multiply(validatedAmount)
+                        .setScale(CONVERTED_AMOUNT_SCALE, RoundingMode.HALF_EVEN)
+                        .stripTrailingZeros()
+                        .toPlainString()
+        );
+    }
+
+    private ExchangeDto createDtoForOkResponse(BigDecimal validatedAmount, CurrencyResponseDto base,
+                                          CurrencyResponseDto target, BigDecimal rate) {
+
+        BigDecimal convertedAmount = calculateConvertedAmount(rate, validatedAmount);
+        return new ExchangeDto(
+                base, target, rate, validatedAmount, convertedAmount);
     }
 
     private boolean isParameterNamesInvalid(List<ParameterCheck> paramsToCheck, Set<String> parametersNames) {
