@@ -1,6 +1,5 @@
 package org.proj3.currency_exchange.servlet;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,8 +36,6 @@ public class ExchangeRatesServlet extends BaseServlet {
             List<ExchangeRateResponseDto> exchangeRates = exchangeRateService.findAll();
             String jsonResponse = JsonUtill.toJson(exchangeRates);
 
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(jsonResponse);
         } catch (RuntimeException e) {
@@ -48,8 +45,6 @@ public class ExchangeRatesServlet extends BaseServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
 
         if (isParametersInvalid(req, resp)) {
             return;

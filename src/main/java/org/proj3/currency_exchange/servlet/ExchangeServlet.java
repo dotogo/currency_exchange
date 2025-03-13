@@ -42,9 +42,6 @@ public class ExchangeServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
         Map<String, String[]> parameterMap = req.getParameterMap();
 
         try {

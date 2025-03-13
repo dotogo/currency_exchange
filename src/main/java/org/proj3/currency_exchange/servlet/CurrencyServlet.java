@@ -24,9 +24,6 @@ public class CurrencyServlet extends HttpServlet {
             return;
         }
 
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
         try {
             Optional<CurrencyResponseDto> dtoOptional = currencyService.findByCode(unverifiedCurrencyCode);
             if (dtoOptional.isPresent()) {

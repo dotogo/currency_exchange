@@ -40,9 +40,6 @@ public class ExchangeRateServlet extends BaseServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String unverifiedCurrencyPair = req.getPathInfo();
 
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
         if (isCurrencyPairEmpty(unverifiedCurrencyPair, resp)) {
             return;
         }
@@ -79,9 +76,6 @@ public class ExchangeRateServlet extends BaseServlet {
 
     @Override
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
         if (!"application/x-www-form-urlencoded".equalsIgnoreCase(req.getContentType())) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_CONTENT_TYPE);
             return;

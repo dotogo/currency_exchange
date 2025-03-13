@@ -25,8 +25,6 @@ public class CurrenciesServlet extends HttpServlet {
             List<CurrencyResponseDto> currencies = currencyService.findAll();
             String jsonResponse = JsonUtill.toJson(currencies);
 
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(jsonResponse);
         } catch (RuntimeException e) {
@@ -79,9 +77,6 @@ public class CurrenciesServlet extends HttpServlet {
             requestDto.setCode(currencyCode);
             requestDto.setName(currencyName);
             requestDto.setSign(currencySign);
-
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
 
             Optional<CurrencyResponseDto> savedDtoOptional = currencyService.save(requestDto);
             if (savedDtoOptional.isPresent()) {
