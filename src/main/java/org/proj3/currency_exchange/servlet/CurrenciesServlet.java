@@ -1,7 +1,6 @@
 package org.proj3.currency_exchange.servlet;
 
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.dto.CurrencyRequestDto;
@@ -16,20 +15,34 @@ import java.util.Map;
 import java.util.Optional;
 
 @WebServlet("/currencies")
-public class CurrenciesServlet extends HttpServlet {
+public class CurrenciesServlet extends BaseServlet {
+    private static final String NAME = "name";
+    private static final String CODE = "code";
+    private static final String SIGN = "sign";
+
+    private static final String REQUIRED_PARAMETERS_MISSING = "One or more parameters have invalid names or are missing. " +
+                                                              "Required parameters: \"%s\", \"%s\", \"%s\"".formatted(NAME, CODE, SIGN);
+
+    private static final String NAME_EMPTY = "Name cannot be empty.";
+    private static final String CODE_EMPTY = "Code cannot be empty.";
+    private static final String SIGN_EMPTY = "Sign cannot be empty.";
+
+    private static final String CURRENCY_ALREADY_EXISTS = "A currency with this code already exists.";
+    private static final String CURRENCY_CANNOT_BE_ADDED = "Currency cannot be added. ";
+    private static final String DATABASE_ERROR = "Database error. ";
+
     private final CurrencyService currencyService = CurrencyService.getInstance();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        try {
+                try {
             List<CurrencyResponseDto> currencies = currencyService.findAll();
-            String jsonResponse = JsonUtill.toJson(currencies);
+            String json = JsonUtill.toJson(currencies);
 
             resp.setStatus(HttpServletResponse.SC_OK);
-            resp.getWriter().write(jsonResponse);
-        } catch (RuntimeException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"error\": \"Internal server error\"}");
+            resp.getWriter().write(json);
+        } catch (CurrencyServiceException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -37,61 +50,56 @@ public class CurrenciesServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Map<String, String[]> parameterMap = req.getParameterMap();
 
-        if (!parameterMap.containsKey("name") || !parameterMap.containsKey("code") || !parameterMap.containsKey("sign")) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("A required form field is missing.");
+        if (!parameterMap.containsKey(NAME) || !parameterMap.containsKey(CODE) || !parameterMap.containsKey(SIGN)) {
+
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, REQUIRED_PARAMETERS_MISSING);
             return;
         }
 
-        String currencyName = parameterMap.get("name")[0];
-        String currencyCode = parameterMap.get("code")[0];
-        String currencySign = parameterMap.get("sign")[0];
+        String name = parameterMap.get(NAME)[0];
+        String code = parameterMap.get(CODE)[0];
+        String sign = parameterMap.get(SIGN)[0];
 
-        if (currencyName.trim().isEmpty()) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("Name cannot be empty.");
+        if (name.trim().isEmpty()) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NAME_EMPTY);
             return;
         }
 
-        if (currencyCode.trim().isEmpty()) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("Code cannot be empty.");
+        if (code.trim().isEmpty()) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, CODE_EMPTY);
             return;
         }
 
-        if (currencySign.trim().isEmpty()) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("Sign cannot be empty.");
+        if (sign.trim().isEmpty()) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, SIGN_EMPTY);
             return;
         }
 
         try {
-            Optional<CurrencyResponseDto> dtoOptional = currencyService.findByCode(currencyCode);
+            Optional<CurrencyResponseDto> dtoOptional = currencyService.findByCode(code);
             if (dtoOptional.isPresent()) {
-                resp.setStatus(HttpServletResponse.SC_CONFLICT);
-                resp.getWriter().write("A currency with this code already exists.");
+                sendErrorResponse(resp, HttpServletResponse.SC_CONFLICT, CURRENCY_ALREADY_EXISTS);
                 return;
             }
 
-            CurrencyRequestDto requestDto = new CurrencyRequestDto();
-            requestDto.setCode(currencyCode);
-            requestDto.setName(currencyName);
-            requestDto.setSign(currencySign);
+            CurrencyRequestDto requestDto = new CurrencyRequestDto(code, name, sign);
 
             Optional<CurrencyResponseDto> savedDtoOptional = currencyService.save(requestDto);
             if (savedDtoOptional.isPresent()) {
                 CurrencyResponseDto currencyResponseDto = savedDtoOptional.get();
-                String responseAsString = JsonUtill.toJson(currencyResponseDto);
+
+                String json = JsonUtill.toJson(currencyResponseDto);
+
                 resp.setStatus(HttpServletResponse.SC_CREATED);
-                resp.getWriter().write(responseAsString);
+                resp.getWriter().write(json);
             }
 
         } catch (IllegalCurrencyCodeException | IllegalCurrencyNameException | IllegalCurrencySignException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("Currency cannot be added. " + e.getMessage());
+            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, CURRENCY_CANNOT_BE_ADDED + e.getMessage());
+
         } catch (DaoException | CurrencyServiceException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("Database error. " + e.getMessage());
+            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, DATABASE_ERROR + e.getMessage());
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

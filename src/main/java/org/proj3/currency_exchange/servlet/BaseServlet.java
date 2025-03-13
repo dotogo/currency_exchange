@@ -16,4 +16,5 @@ public class BaseServlet extends HttpServlet {
         resp.setStatus(status);
         resp.getWriter().write(json);
     }
+
 }

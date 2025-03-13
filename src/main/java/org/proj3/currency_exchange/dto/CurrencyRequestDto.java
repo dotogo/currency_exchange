@@ -5,16 +5,18 @@ public class CurrencyRequestDto {
     private String name;
     private String sign;
 
+    public CurrencyRequestDto() {
+
+    }
+
+    public CurrencyRequestDto(String code, String name, String sign) {
+        this.code = code;
+        this.name = name;
+        this.sign = sign;
+    }
+
     public void setCode(String code) {
         this.code = code;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setSign(String sign) {
-        this.sign = sign;
     }
 
     public String getCode() {
