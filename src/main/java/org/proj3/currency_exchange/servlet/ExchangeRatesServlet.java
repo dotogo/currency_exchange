@@ -18,7 +18,6 @@ import java.util.Optional;
 @WebServlet("/exchangeRates")
 public class ExchangeRatesServlet extends BaseServlet {
     private static final String FIELD_IS_MISSING = "A required form field is missing.";
-    private static final String INTERNAL_SERVER_ERROR = "Internal server error.";
     private static final String EMPTY_BASE_CURRENCY_CODE = "Base currency code cannot be empty.";
     private static final String EMPTY_TARGET_CURRENCY_CODE = "Target currency code cannot be empty.";
     private static final String EMPTY_RATE = "Rate cannot be empty.";
@@ -34,12 +33,12 @@ public class ExchangeRatesServlet extends BaseServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             List<ExchangeRateResponseDto> exchangeRates = exchangeRateService.findAll();
-            String jsonResponse = JsonUtill.toJson(exchangeRates);
+            String json = JsonUtill.toJson(exchangeRates);
 
             resp.setStatus(HttpServletResponse.SC_OK);
-            resp.getWriter().write(jsonResponse);
-        } catch (RuntimeException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR );
+            resp.getWriter().write(json);
+        } catch (ExchangeRateServiceException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 

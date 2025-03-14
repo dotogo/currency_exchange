@@ -12,16 +12,15 @@ import org.proj3.currency_exchange.util.CurrencyUtil;
 import org.proj3.currency_exchange.util.ExchangeUtil;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ExchangeRateService {
     private static final ExchangeRateService instance = new ExchangeRateService();
     private static final ExchangeRateDao exchangeRateDao = ExchangeRateDao.getInstance();
     private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
 
-    private static final String ERROR_FINDING_ALL_EXCHANGE_RATES = ">>> Something went wrong while finding all exchange rates :( <<<";
     private static final String INVALID_CURRENCY_PAIR_LENGTH = "Invalid length of currency pair code. " +
                                                               "Please enter exactly 6 characters with real currency codes.";
     private static final String INVALID_EXCHANGE_RATE = "Invalid exchange rate. " +
@@ -48,14 +47,11 @@ public class ExchangeRateService {
     public List<ExchangeRateResponseDto> findAll() {
         try {
             List<ExchangeRateEntity> rateEntities = exchangeRateDao.findAll();
-
-            List<ExchangeRateResponseDto> dtos = new ArrayList<>();
-            for (ExchangeRateEntity rateEntity : rateEntities) {
-                dtos.add(mapper.toDto(rateEntity));
-            }
-            return dtos;
+            return rateEntities.stream()
+                    .map(mapper::toDto)
+                    .collect(Collectors.toList());
         } catch (DaoException e) {
-            throw new ExchangeRateServiceException(ERROR_FINDING_ALL_EXCHANGE_RATES, e);
+            throw new ExchangeRateServiceException(e.getMessage(), e);
         }
     }
 
