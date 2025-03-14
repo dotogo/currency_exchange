@@ -79,13 +79,11 @@ public class ExchangeRatesServlet extends BaseServlet {
         requestDto.setRate(exchangeRate);
 
         try {
-            Optional<ExchangeRateResponseDto> savedDtoOptional = exchangeRateService.save(requestDto);
-            if (savedDtoOptional.isPresent()) {
-                ExchangeRateResponseDto rateResponseDto = savedDtoOptional.get();
+                ExchangeRateResponseDto rateResponseDto = exchangeRateService.save(requestDto);
                 String json = JsonUtill.toJson(rateResponseDto);
+
                 resp.setStatus(HttpServletResponse.SC_CREATED);
                 resp.getWriter().write(json);
-            }
 
         } catch (IllegalExchangeRateException | ExchangeRateServiceException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());

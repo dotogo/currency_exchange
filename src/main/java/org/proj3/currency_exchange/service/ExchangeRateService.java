@@ -73,7 +73,7 @@ public class ExchangeRateService {
         }
     }
 
-    public Optional<ExchangeRateResponseDto> save(ExchangeRateRequestDto requestDto) {
+    public ExchangeRateResponseDto save(ExchangeRateRequestDto requestDto) {
         BigDecimal exchangeRate = requestDto.getRate();
 
         validateExchangeRateValue(exchangeRate);
@@ -91,7 +91,7 @@ public class ExchangeRateService {
             ExchangeRateEntity rate = new ExchangeRateEntity(baseCurrency, targetCurrency, exchangeRate);
             ExchangeRateEntity savedRate = exchangeRateDao.save(rate);
 
-            return Optional.of(mapper.toDto(savedRate));
+            return mapper.toDto(savedRate);
 
         } catch (DaoException e) {
             throw new ExchangeRateServiceException(e.getMessage(), e);
