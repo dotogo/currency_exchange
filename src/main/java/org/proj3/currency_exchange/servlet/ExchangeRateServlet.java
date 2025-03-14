@@ -26,29 +26,32 @@ public class ExchangeRateServlet extends BaseServlet {
     private static final String EXCHANGE_RATE_NOT_FOUND = "Exchange rate not found.";
     private static final String JSON_ERROR = "Error processing JSON. ";
     private static final String IO_ERROR = "Input/output data error. ";
-    private static final String PARAMETER_IS_MISSING = "Missing required parameter: rate";
+    private static final String PARAMETER_IS_MISSING = "Missing required parameter: \"rate\"";
     private static final String EMPTY_RATE = "Rate cannot be empty.";
     private static final String INVALID_EXCHANGE_RATE = "Invalid exchange rate. " +
                                                         "Please enter a positive decimal number with no more than 6 decimal places.";
     private static final String CURRENCY_PAIR_IS_ABSENT = "The currency pair is absent in the database.";
-    private static final String INVALID_CONTENT_TYPE = "Invalid Content-Type. Expected application/x-www-form-urlencoded.";
+    private static final String INVALID_CONTENT_TYPE = "Invalid Content-Type. Expected \"application/x-www-form-urlencoded\".";
     private static final String ERROR_READING_REQUEST_BODY = "Error reading request body";
+    private static final String RATE = "rate";
 
     private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String unverifiedCurrencyPair = req.getPathInfo();
+        String currencyPair = req.getPathInfo();
 
-        if (isCurrencyPairEmpty(unverifiedCurrencyPair, resp)) {
+        if (validateAndSendErrorForEmptyCurrencyPair(resp, currencyPair)) {
             return;
         }
 
         try {
-            Optional<ExchangeRateResponseDto> dtoOptional = exchangeRateService.findByCode(unverifiedCurrencyPair);
+            Optional<ExchangeRateResponseDto> dtoOptional = exchangeRateService.findByCode(currencyPair);
             if (dtoOptional.isPresent()) {
                 ExchangeRateResponseDto responseDto = dtoOptional.get();
+
                 String json = JsonUtill.toJson(responseDto);
+
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.getWriter().write(json);
             } else {
@@ -66,7 +69,7 @@ public class ExchangeRateServlet extends BaseServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String method = req.getMethod();
-        System.out.println("HTTP Method: " + method);
+
         if (method.equals("PATCH")) {
             this.doPatch(req, resp);
         } else {
@@ -76,8 +79,7 @@ public class ExchangeRateServlet extends BaseServlet {
 
     @Override
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        if (!"application/x-www-form-urlencoded".equalsIgnoreCase(req.getContentType())) {
-            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_CONTENT_TYPE);
+        if (validateAndSendErrorForInvalidContentType(req, resp)){
             return;
         }
 
@@ -97,42 +99,48 @@ public class ExchangeRateServlet extends BaseServlet {
         Map<String, String> parameters = parseFormData(body);
 
         String currencyPair = req.getPathInfo();
-        if (isCurrencyPairEmpty(currencyPair, resp)) {
+        if (validateAndSendErrorForEmptyCurrencyPair(resp, currencyPair)) {
             return;
         }
 
-        if (!parameters.containsKey("rate")) {
+        if (!parameters.containsKey(RATE)) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, PARAMETER_IS_MISSING);
             return;
         }
 
-        if (isRequestParametersEmpty(parameters, resp)) {
+        if (validateAndSendErrorForEmptyRequestParameters(parameters, resp)) {
             return;
         }
 
-        String parameterRate = parameters.get("rate");
-
-        BigDecimal exchangeRate;
-        try {
-            exchangeRate = new BigDecimal(parameterRate);
-        } catch (NumberFormatException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INVALID_EXCHANGE_RATE);
-            return;
-        }
+        String rateFromParameter = parameters.get(RATE);
 
         try {
+            BigDecimal exchangeRate = new BigDecimal(rateFromParameter);
+
             Optional<ExchangeRateResponseDto> updatedRateDtoOptional = exchangeRateService.update(currencyPair, exchangeRate);
+
             if (updatedRateDtoOptional.isPresent()) {
                 ExchangeRateResponseDto responseDto = updatedRateDtoOptional.get();
                 String json = JsonUtill.toJson(responseDto);
+
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.getWriter().write(json);
             } else {
                 sendErrorResponse(resp, HttpServletResponse.SC_NOT_FOUND, CURRENCY_PAIR_IS_ABSENT);
             }
+        } catch (NumberFormatException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INVALID_EXCHANGE_RATE);
         } catch (IllegalCurrencyCodeException | ExchangeRateServiceException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    private boolean validateAndSendErrorForInvalidContentType(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (!"application/x-www-form-urlencoded".equalsIgnoreCase(req.getContentType())) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_CONTENT_TYPE);
+            return true;
+        }
+        return false;
     }
 
     private Map<String, String> parseFormData(String data) {
@@ -154,16 +162,20 @@ public class ExchangeRateServlet extends BaseServlet {
         return paramMap;
     }
 
-    private boolean isCurrencyPairEmpty(String unverifiedCurrencyPair, HttpServletResponse resp) throws IOException {
-        if (unverifiedCurrencyPair == null || unverifiedCurrencyPair.equals("/")) {
+    private boolean validateAndSendErrorForEmptyCurrencyPair(HttpServletResponse resp, String pair) throws IOException {
+        if (isCurrencyPairEmpty(pair)){
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, CURRENCY_CODES_MISSING_IN_ADDRESS);
             return true;
         }
         return false;
     }
 
-    private boolean isRequestParametersEmpty(Map<String, String> parameterMap, HttpServletResponse resp) throws IOException {
-        String rate = parameterMap.get("rate");
+    private boolean isCurrencyPairEmpty(String unverifiedCurrencyPair) {
+        return unverifiedCurrencyPair == null || unverifiedCurrencyPair.equals("/");
+    }
+
+    private boolean validateAndSendErrorForEmptyRequestParameters(Map<String, String> parameterMap, HttpServletResponse resp) throws IOException {
+        String rate = parameterMap.get(RATE);
 
         if (rate == null || rate.trim().isEmpty()) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, EMPTY_RATE);
