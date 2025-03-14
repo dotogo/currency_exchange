@@ -25,8 +25,8 @@ public class ExchangeRateService {
                                                               "Please enter exactly 6 characters with real currency codes.";
     private static final String INVALID_EXCHANGE_RATE = "Invalid exchange rate. " +
                                                         "Please enter a positive decimal number with no more than 6 decimal places.";
-    private static final String ERROR_FINDING_BASE_CURRENCY = "Database error. Base currency is not available.";
-    private static final String ERROR_FINDING_TARGET_CURRENCY = "Database error. Target currency is not available.";
+    private static final String NO_BASE_CURRENCY = "There is no base currency in the database.";
+    private static final String NO_TARGET_CURRENCY = "There is no target currency in the database.";
 
     private static final String RATE_ERROR_MESSAGE = "Please enter a valid rate: a number greater than 0," +
                                                      " less than a million, no more than 6 decimal places.";
@@ -69,7 +69,7 @@ public class ExchangeRateService {
             Optional<ExchangeRateEntity> optionalRate = exchangeRateDao.findByCode(currencyPair);
             return optionalRate.map(mapper::toDto);
         } catch (DaoException e) {
-            throw new CurrencyServiceException(e);
+            throw new ExchangeRateServiceException(e.getMessage(), e);
         }
     }
 
@@ -81,15 +81,22 @@ public class ExchangeRateService {
         String baseCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getBaseCurrencyCode());
         String targetCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getTargetCurrencyCode());
 
-        CurrencyEntity baseCurrency = currencyDao.findByCode(baseCurrencyCode)
-                .orElseThrow(() -> new ExchangeRateServiceException(ERROR_FINDING_BASE_CURRENCY));
+        try {
+            CurrencyEntity baseCurrency = currencyDao.findByCode(baseCurrencyCode)
+                    .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
 
-        CurrencyEntity targetCurrency = currencyDao.findByCode(targetCurrencyCode)
-                .orElseThrow(() -> new ExchangeRateServiceException(ERROR_FINDING_TARGET_CURRENCY));
+            CurrencyEntity targetCurrency = currencyDao.findByCode(targetCurrencyCode)
+                    .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
 
-        ExchangeRateEntity rateToSave = new ExchangeRateEntity(baseCurrency, targetCurrency, exchangeRate);
-        ExchangeRateEntity savedRate = exchangeRateDao.save(rateToSave);
-        return Optional.of(mapper.toDto(savedRate));
+            ExchangeRateEntity rate = new ExchangeRateEntity(baseCurrency, targetCurrency, exchangeRate);
+            ExchangeRateEntity savedRate = exchangeRateDao.save(rate);
+
+            return Optional.of(mapper.toDto(savedRate));
+
+        } catch (DaoException e) {
+            throw new ExchangeRateServiceException(e.getMessage(), e);
+        }
+
     }
 
     public Optional<ExchangeRateResponseDto> update(String currencyPair, BigDecimal exchangeRate) {
@@ -105,10 +112,10 @@ public class ExchangeRateService {
         CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
 
         CurrencyEntity baseCurrency = currencyDao.findByCode(baseCurrencyCode)
-                .orElseThrow(() -> new ExchangeRateServiceException(ERROR_FINDING_BASE_CURRENCY));
+                .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
 
         CurrencyEntity targetCurrency = currencyDao.findByCode(targetCurrencyCode)
-                .orElseThrow(() -> new ExchangeRateServiceException(ERROR_FINDING_TARGET_CURRENCY));
+                .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
 
         int baseCurrencyId = baseCurrency.getId();
         int targetCurrencyId = targetCurrency.getId();
@@ -122,7 +129,7 @@ public class ExchangeRateService {
             return ExchangeUtil.validatePositiveNumber(rate,MAX_RATE_INTEGER_DIGITS, MAX_RATE_FRACTIONAL_DIGITS, RATE_ERROR_MESSAGE);
 
         } catch (IllegalArgumentException e) {
-            throw new IllegalExchangeRateException(e.getMessage());
+            throw new ExchangeRateServiceException(e.getMessage(), e);
         }
 
     }

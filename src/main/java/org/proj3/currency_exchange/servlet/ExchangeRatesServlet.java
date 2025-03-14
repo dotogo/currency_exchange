@@ -45,7 +45,7 @@ public class ExchangeRatesServlet extends BaseServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
-        if (isParametersInvalid(req, resp)) {
+        if (validateAndSendErrorWhenParametersInvalid(req, resp)) {
             return;
         }
 
@@ -59,11 +59,12 @@ public class ExchangeRatesServlet extends BaseServlet {
             exchangeRate = exchangeRateService.validateExchangeRate(parameterRate);
             String currencyPair = baseCurrencyCode + targetCurrencyCode;
             Optional<ExchangeRateResponseDto> dtoOptional = exchangeRateService.findByCode(currencyPair);
+
             if (dtoOptional.isPresent()) {
                 sendErrorResponse(resp, HttpServletResponse.SC_CONFLICT, PAIR_ALREADY_EXISTS);
                 return;
             }
-        } catch (IllegalCurrencyCodeException | IllegalExchangeRateException e) {
+        } catch (IllegalExchangeRateException | IllegalCurrencyCodeException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             return;
 
@@ -94,7 +95,7 @@ public class ExchangeRatesServlet extends BaseServlet {
         }
     }
 
-    private boolean isRequestParameterNamesInvalid(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private boolean validateAndSendErrorWhenParameterNamesInvalid(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Map<String, String[]> parameterMap = req.getParameterMap();
 
         if (!parameterMap.containsKey(BASE_CURRENCY_PARAMETER) ||
@@ -106,7 +107,7 @@ public class ExchangeRatesServlet extends BaseServlet {
         return false;
     }
 
-    private boolean isRateNotNumber(String parameterRate, HttpServletResponse resp) throws IOException {
+    private boolean validateAndSendErrorWhenRateNotNumber(String parameterRate, HttpServletResponse resp) throws IOException {
         try {
             new BigDecimal(parameterRate);
             return false;
@@ -116,7 +117,7 @@ public class ExchangeRatesServlet extends BaseServlet {
         }
     }
 
-    private boolean isRequestParametersEmpty(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private boolean validateAndSendErrorWhenParametersEmpty(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String base = req.getParameter(BASE_CURRENCY_PARAMETER);
         String target = req.getParameter(TARGET_CURRENCY_PARAMETER);
         String rate = req.getParameter(RATE_PARAMETER);
@@ -138,10 +139,10 @@ public class ExchangeRatesServlet extends BaseServlet {
         return false;
     }
 
-    private boolean isParametersInvalid(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        return isRequestParameterNamesInvalid(req, resp)
-               || isRequestParametersEmpty(req, resp)
-               || isRateNotNumber(req.getParameter(RATE_PARAMETER), resp);
+    private boolean validateAndSendErrorWhenParametersInvalid(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        return validateAndSendErrorWhenParameterNamesInvalid(req, resp)
+               || validateAndSendErrorWhenParametersEmpty(req, resp)
+               || validateAndSendErrorWhenRateNotNumber(req.getParameter(RATE_PARAMETER), resp);
     }
 
 }
