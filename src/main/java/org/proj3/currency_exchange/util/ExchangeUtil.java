@@ -25,6 +25,15 @@ public class ExchangeUtil {
         return value;
     }
 
+    public static void validatePositiveNumber(BigDecimal number, int maxInteger, int maxFractional, String errorMessage) {
+
+        if (number.compareTo(BigDecimal.ZERO) <= 0
+            || isLengthInvalid(number, maxInteger, maxFractional)) {
+
+            throw new IllegalArgumentException(errorMessage);
+        }
+    }
+
     private static boolean isLengthInvalid(BigDecimal value, int maxInteger, int maxFractional) {
         int fractionalDigits = value.scale();
         int integerDigits = value.precision() - fractionalDigits;

@@ -1,7 +1,5 @@
 package org.proj3.currency_exchange.dto;
 
-import org.proj3.currency_exchange.entity.CurrencyEntity;
-
 import java.math.BigDecimal;
 
 public class ExchangeRateRequestDto {
@@ -9,20 +7,18 @@ public class ExchangeRateRequestDto {
     private String targetCurrencyCode;
     private BigDecimal rate;
 
+    public ExchangeRateRequestDto(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate) {
+        this.baseCurrencyCode = baseCurrencyCode;
+        this.targetCurrencyCode = targetCurrencyCode;
+        this.rate = rate;
+    }
+
     public String getBaseCurrencyCode() {
         return baseCurrencyCode;
     }
 
-    public void setBaseCurrencyCode(String baseCurrencyCode) {
-        this.baseCurrencyCode = baseCurrencyCode;
-    }
-
     public String getTargetCurrencyCode() {
         return targetCurrencyCode;
-    }
-
-    public void setTargetCurrencyCode(String targetCurrencyCode) {
-        this.targetCurrencyCode = targetCurrencyCode;
     }
 
     public BigDecimal getRate() {

@@ -23,8 +23,7 @@ public class ExchangeRateService {
 
     private static final String INVALID_CURRENCY_PAIR_LENGTH = "Invalid length of currency pair code. " +
                                                               "Please enter exactly 6 characters with real currency codes.";
-    private static final String INVALID_EXCHANGE_RATE = "Invalid exchange rate. " +
-                                                        "Please enter a positive decimal number with no more than 6 decimal places.";
+
     private static final String NO_BASE_CURRENCY = "There is no base currency in the database.";
     private static final String NO_TARGET_CURRENCY = "There is no target currency in the database.";
 
@@ -76,8 +75,6 @@ public class ExchangeRateService {
     public ExchangeRateResponseDto save(ExchangeRateRequestDto requestDto) {
         BigDecimal exchangeRate = requestDto.getRate();
 
-        validateExchangeRateValue(exchangeRate);
-
         String baseCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getBaseCurrencyCode());
         String targetCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getTargetCurrencyCode());
 
@@ -96,54 +93,56 @@ public class ExchangeRateService {
         } catch (DaoException e) {
             throw new ExchangeRateServiceException(e.getMessage(), e);
         }
-
     }
 
     public Optional<ExchangeRateResponseDto> update(String currencyPair, BigDecimal exchangeRate) {
         currencyPair = CurrencyUtil.normalizeCurrencyCode(currencyPair);
 
-        validatePairCodeLength(currencyPair);
-        validateExchangeRateValue(exchangeRate);
+        try {
+            validatePairCodeLength(currencyPair);
+            validateExchangeRate(exchangeRate);
 
-        String baseCurrencyCode = currencyPair.substring(0, 3);
-        String targetCurrencyCode = currencyPair.substring(3);
+            String baseCurrencyCode = currencyPair.substring(0, 3);
+            String targetCurrencyCode = currencyPair.substring(3);
 
-        CurrencyUtil.validateCurrencyCode(baseCurrencyCode);
-        CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
+            CurrencyUtil.validateCurrencyCode(baseCurrencyCode);
+            CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
 
-        CurrencyEntity baseCurrency = currencyDao.findByCode(baseCurrencyCode)
-                .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
+            CurrencyEntity baseCurrency = currencyDao.findByCode(baseCurrencyCode)
+                    .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
 
-        CurrencyEntity targetCurrency = currencyDao.findByCode(targetCurrencyCode)
-                .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
+            CurrencyEntity targetCurrency = currencyDao.findByCode(targetCurrencyCode)
+                    .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
 
-        int baseCurrencyId = baseCurrency.getId();
-        int targetCurrencyId = targetCurrency.getId();
+            int baseCurrencyId = baseCurrency.getId();
+            int targetCurrencyId = targetCurrency.getId();
 
-        ExchangeRateEntity updatedRate = exchangeRateDao.update(baseCurrencyId, targetCurrencyId, exchangeRate);
-        return Optional.of(mapper.toDto(updatedRate));
+            ExchangeRateEntity updatedRate = exchangeRateDao.update(baseCurrencyId, targetCurrencyId, exchangeRate);
+            return Optional.of(mapper.toDto(updatedRate));
+
+        } catch (IllegalCurrencyCodeException | IllegalArgumentException e) {
+            throw new ExchangeRateServiceException(e.getMessage(), e);
+        }
     }
 
     public BigDecimal validateExchangeRate(String rate) {
         try {
-            return ExchangeUtil.validatePositiveNumber(rate,MAX_RATE_INTEGER_DIGITS, MAX_RATE_FRACTIONAL_DIGITS, RATE_ERROR_MESSAGE);
+            return ExchangeUtil.validatePositiveNumber(
+                    rate, MAX_RATE_INTEGER_DIGITS, MAX_RATE_FRACTIONAL_DIGITS, RATE_ERROR_MESSAGE);
 
         } catch (IllegalArgumentException e) {
             throw new ExchangeRateServiceException(e.getMessage(), e);
         }
+    }
 
+    private void validateExchangeRate(BigDecimal rate) throws IllegalArgumentException {
+            ExchangeUtil.validatePositiveNumber(
+                    rate, MAX_RATE_INTEGER_DIGITS, MAX_RATE_FRACTIONAL_DIGITS, RATE_ERROR_MESSAGE);
     }
 
     private void validatePairCodeLength(String pairCode) {
-        System.out.println("pairCode: " + pairCode);
         if (pairCode.length() != 6) {
             throw new IllegalCurrencyCodeException(INVALID_CURRENCY_PAIR_LENGTH);
-        }
-    }
-
-    private void validateExchangeRateValue(BigDecimal exchangeRate) {
-        if (exchangeRate.scale() > 6 || exchangeRate.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalExchangeRateException(INVALID_EXCHANGE_RATE);
         }
     }
 

@@ -73,10 +73,7 @@ public class ExchangeRatesServlet extends BaseServlet {
             return;
         }
 
-        ExchangeRateRequestDto requestDto = new ExchangeRateRequestDto();
-        requestDto.setBaseCurrencyCode(baseCurrencyCode);
-        requestDto.setTargetCurrencyCode(targetCurrencyCode);
-        requestDto.setRate(exchangeRate);
+        ExchangeRateRequestDto requestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, exchangeRate);
 
         try {
                 ExchangeRateResponseDto rateResponseDto = exchangeRateService.save(requestDto);
