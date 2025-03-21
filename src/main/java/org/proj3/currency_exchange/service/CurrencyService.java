@@ -14,9 +14,11 @@ public class CurrencyService {
     private static final CurrencyService instance = new CurrencyService();
     private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
 
-    private static final String ERROR_FINDING_BY_CODE = "\n>>> Something went wrong while finding for currency by code :( <<<";
-    private static final String ERROR_FINDING_ALL_CURRENCIES = "\n>>> Something went wrong while finding all currencies :( <<<";
+    private static final String ERROR_FINDING_BY_CODE = ">>> Something went wrong while finding for currency by code :( <<<";
+    private static final String ERROR_FINDING_ALL_CURRENCIES = ">>> Something went wrong while finding all currencies :( <<<";
     private static final String ERROR_SAVING_CURRENCY = ">>> The currency was not saved <<<";
+    private static final String VALID_CURRENCY_NAME = "Invalid currency name. The only correct name for this code is: ";
+    private static final String VALID_CURRENCY_SIGN = "Invalid currency name. The only correct sign for this code is: ";
 
     private final CurrencyMapper mapper = CurrencyMapper.getInstance();
 
@@ -60,21 +62,26 @@ public class CurrencyService {
 
     public Optional<CurrencyResponseDto> save(CurrencyRequestDto currencyRequestDto) {
         String code = CurrencyUtil.normalizeCurrencyCode(currencyRequestDto.getCode());
-        currencyRequestDto.setCode(code);
 
-        if (!isCurrencyNameValid(currencyRequestDto.getCode(), currencyRequestDto.getName())) {
-            throw new IllegalCurrencyNameException("Invalid currency name: " + currencyRequestDto.getName());
+        Currency currency = Currency.getInstance(code);
+        String displayName = currency.getDisplayName(Locale.US);
+        String symbol = currency.getSymbol(Locale.US);
+
+        if (isCurrencyNameInvalid(displayName, currencyRequestDto.getName())) {
+            throw new IllegalCurrencyNameException(VALID_CURRENCY_NAME + displayName);
         }
 
-        if (!isCurrencySignValid(currencyRequestDto.getCode(), currencyRequestDto.getSign())) {
-            throw new IllegalCurrencySignException("Invalid currency sign : " + currencyRequestDto.getSign());
+        if (isCurrencySignInvalid(symbol, currencyRequestDto.getSign())) {
+            throw new IllegalCurrencySignException(VALID_CURRENCY_SIGN + symbol);
         }
 
         try {
+            currencyRequestDto.setCode(code);
             CurrencyEntity entity = mapper.toEntity(currencyRequestDto);
             CurrencyEntity savedCurrency = currencyDao.save(entity);
             CurrencyResponseDto responseDto = mapper.toDto(savedCurrency);
             return Optional.of(responseDto);
+
         } catch (Exception e) {
             throw new CurrencyServiceException(ERROR_SAVING_CURRENCY, e);
         }
@@ -84,16 +91,12 @@ public class CurrencyService {
         return instance;
     }
 
-    private boolean isCurrencyNameValid(String currencyCode, String currencyName) {
-        Currency currency = Currency.getInstance(currencyCode);
-        String displayName = currency.getDisplayName(Locale.US);
-        return displayName.equals(currencyName);
+    private boolean isCurrencyNameInvalid(String displayName, String currencyName) {
+        return !displayName.equals(currencyName);
     }
 
-    private boolean isCurrencySignValid(String currencyCode, String currencySign) {
-        Currency currency = Currency.getInstance(currencyCode);
-        String symbol = currency.getSymbol(Locale.US);
-        return symbol.equals(currencySign);
+    private boolean isCurrencySignInvalid(String symbol, String currencySign) {
+        return !symbol.equals(currencySign);
     }
 
 }
