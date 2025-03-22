@@ -8,13 +8,12 @@ import org.proj3.currency_exchange.util.DatabaseConfig;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ExchangeRateDao {
+public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity> {
     private static final  ExchangeRateDao instance = new ExchangeRateDao();
-    private static final DataSource dataSource = DatabaseConfig.getDataSource();
+//    private static final DataSource dataSource = DatabaseConfig.getDataSource();
 
     private static final String BASE_QUERY = """
             SELECT
@@ -53,7 +52,7 @@ public class ExchangeRateDao {
             """;
 
     private static final String FINDING_ALL_ERROR = "Error while finding exchange rates.";
-    private static final String FINDING_BY_CODE_PAIR_ERROR = "Error finding exchange rate by code pair.";
+    private static final String FINDING_ERROR = "Error finding exchange rate by code pair.";
     private static final String NO_ROWS_AFFECTED_ERROR = "Saving exchange rate failed, no rows affected.";
     private static final String GENERATED_ID_RETRIEVING_ERROR = "Failed to retrieve generated ID.";
     private static final String SAVING_ERROR = "Error saving exchange rate.";
@@ -68,21 +67,10 @@ public class ExchangeRateDao {
     }
 
     public List<ExchangeRateEntity> findAll() {
-        List<ExchangeRateEntity> rateEntities = new ArrayList<>();
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(BASE_QUERY)) {
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                rateEntities.add(mapRowToEntity(resultSet));
-            }
-        } catch (SQLException e) {
-            throw new DaoException(FINDING_ALL_ERROR, e);
-        }
-        return rateEntities;
+        return findAll(BASE_QUERY, FINDING_ALL_ERROR);
     }
 
-    public Optional<ExchangeRateEntity> findByCode(String currencyPair) {
+    public Optional<ExchangeRateEntity> find(String currencyPair) {
         String baseCurrencyCode = currencyPair.substring(0, 3);
         String targetCurrencyCode = currencyPair.substring(3);
         String sql = BASE_QUERY + FIND_BY_CODE_WHERE;
@@ -100,7 +88,7 @@ public class ExchangeRateDao {
             }
 
         } catch (SQLException e) {
-            throw new DaoException(FINDING_BY_CODE_PAIR_ERROR, e);
+            throw new DaoException(FINDING_ERROR, e);
         }
         return exchangeRate;
     }
@@ -179,7 +167,7 @@ public class ExchangeRateDao {
 //        System.out.println();
 //    }
 
-    private ExchangeRateEntity mapRowToEntity(ResultSet resultSet) throws SQLException {
+    protected ExchangeRateEntity mapRowToEntity(ResultSet resultSet) throws SQLException {
         ExchangeRateEntity rateEntity = new ExchangeRateEntity();
         rateEntity.setId(resultSet.getInt("exchange_rate_id"));
         rateEntity.setRate(resultSet.getBigDecimal("rate"));

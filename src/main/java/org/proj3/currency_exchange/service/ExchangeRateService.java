@@ -65,7 +65,7 @@ public class ExchangeRateService {
         CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
 
         try {
-            Optional<ExchangeRateEntity> optionalRate = exchangeRateDao.findByCode(currencyPair);
+            Optional<ExchangeRateEntity> optionalRate = exchangeRateDao.find(currencyPair);
             return optionalRate.map(mapper::toDto);
         } catch (DaoException e) {
             throw new ExchangeRateServiceException(e.getMessage(), e);
@@ -79,10 +79,10 @@ public class ExchangeRateService {
         String targetCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getTargetCurrencyCode());
 
         try {
-            CurrencyEntity baseCurrency = currencyDao.findByCode(baseCurrencyCode)
+            CurrencyEntity baseCurrency = currencyDao.find(baseCurrencyCode)
                     .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
 
-            CurrencyEntity targetCurrency = currencyDao.findByCode(targetCurrencyCode)
+            CurrencyEntity targetCurrency = currencyDao.find(targetCurrencyCode)
                     .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
 
             ExchangeRateEntity rate = new ExchangeRateEntity(baseCurrency, targetCurrency, exchangeRate);
@@ -108,10 +108,10 @@ public class ExchangeRateService {
             CurrencyUtil.validateCurrencyCode(baseCurrencyCode);
             CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
 
-            CurrencyEntity baseCurrency = currencyDao.findByCode(baseCurrencyCode)
+            CurrencyEntity baseCurrency = currencyDao.find(baseCurrencyCode)
                     .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
 
-            CurrencyEntity targetCurrency = currencyDao.findByCode(targetCurrencyCode)
+            CurrencyEntity targetCurrency = currencyDao.find(targetCurrencyCode)
                     .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
 
             int baseCurrencyId = baseCurrency.getId();

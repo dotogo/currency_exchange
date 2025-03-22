@@ -46,7 +46,7 @@ public class CurrencyService {
         Optional<CurrencyEntity> optionalCurrency;
 
         try {
-            optionalCurrency = currencyDao.findByCode(code);
+            optionalCurrency = currencyDao.find(code);
 
             Optional<CurrencyResponseDto> dto = Optional.empty();
             if (optionalCurrency.isPresent()) {
