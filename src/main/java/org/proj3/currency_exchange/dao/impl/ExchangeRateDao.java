@@ -1,4 +1,4 @@
-package org.proj3.currency_exchange.dao;
+package org.proj3.currency_exchange.dao.impl;
 
 import org.proj3.currency_exchange.entity.CurrencyEntity;
 import org.proj3.currency_exchange.entity.ExchangeRateEntity;
@@ -7,10 +7,9 @@ import org.proj3.currency_exchange.exception.DaoException;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.List;
 import java.util.Optional;
 
-public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity> {
+public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity, String> {
 
     private static final String BASE_QUERY = """
             SELECT
@@ -63,10 +62,6 @@ public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity> {
 
     public static ExchangeRateDao createInstance(DataSource dataSource) {
         return new ExchangeRateDao(dataSource);
-    }
-
-    public List<ExchangeRateEntity> findAll() {
-        return findAll(BASE_QUERY, FINDING_ALL_ERROR);
     }
 
     public Optional<ExchangeRateEntity> find(String currencyPair) {
@@ -189,6 +184,14 @@ public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity> {
         rateEntity.setTargetCurrency(targetCurrency);
 
         return rateEntity;
+    }
+
+    protected String getFindAllQuery() {
+        return BASE_QUERY;
+    }
+
+    protected String getFindAllErrorMessage() {
+        return FINDING_ALL_ERROR;
     }
 
 }

@@ -1,7 +1,7 @@
 package org.proj3.currency_exchange.config;
 
-import org.proj3.currency_exchange.dao.CurrencyDao;
-import org.proj3.currency_exchange.dao.ExchangeRateDao;
+import org.proj3.currency_exchange.dao.impl.CurrencyDao;
+import org.proj3.currency_exchange.dao.impl.ExchangeRateDao;
 import org.proj3.currency_exchange.mapper.CurrencyMapper;
 import org.proj3.currency_exchange.mapper.ExchangeRateMapper;
 import org.proj3.currency_exchange.service.CurrencyService;

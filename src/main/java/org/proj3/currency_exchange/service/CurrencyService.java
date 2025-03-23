@@ -1,6 +1,6 @@
 package org.proj3.currency_exchange.service;
 
-import org.proj3.currency_exchange.dao.CurrencyDao;
+import org.proj3.currency_exchange.dao.impl.CurrencyDao;
 import org.proj3.currency_exchange.dto.CurrencyRequestDto;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.entity.CurrencyEntity;

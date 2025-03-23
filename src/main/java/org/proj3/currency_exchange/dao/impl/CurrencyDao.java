@@ -1,14 +1,13 @@
-package org.proj3.currency_exchange.dao;
+package org.proj3.currency_exchange.dao.impl;
 
 import org.proj3.currency_exchange.entity.CurrencyEntity;
 import org.proj3.currency_exchange.exception.DaoException;
 
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.List;
 import java.util.Optional;
 
-public class CurrencyDao extends AbstractDao<CurrencyEntity> {
+public class CurrencyDao extends AbstractDao<CurrencyEntity, String> {
     private static final String FINDING_ALL_ERROR = "Error while fetching currencies";
     private static final String FINDING_ERROR = "Error finding currency by code";
     private static final String NO_ROWS_AFFECTED = "Saving currency failed, no rows affected.";
@@ -31,10 +30,6 @@ public class CurrencyDao extends AbstractDao<CurrencyEntity> {
 
     public static CurrencyDao createInstance(DataSource dataSource) {
         return new CurrencyDao(dataSource);
-    }
-
-    public List<CurrencyEntity> findAll() {
-        return findAll(FIND_ALL_SQL, FINDING_ALL_ERROR);
     }
 
     public Optional<CurrencyEntity> find(String code) {
@@ -61,7 +56,7 @@ public class CurrencyDao extends AbstractDao<CurrencyEntity> {
 
     public CurrencyEntity save(CurrencyEntity currency) {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement preparedStatement = connection.prepareStatement(SAVE_SQL)) {
 
             preparedStatement.setString(1, currency.getCode());
             preparedStatement.setString(2, currency.getFullName());
@@ -97,5 +92,13 @@ public class CurrencyDao extends AbstractDao<CurrencyEntity> {
                 resultSet.getString("sign"));
         currency.setId(resultSet.getInt("id"));
         return currency;
+    }
+
+    protected String getFindAllQuery() {
+        return FIND_ALL_SQL;
+    }
+
+    protected String getFindAllErrorMessage() {
+        return FINDING_ALL_ERROR;
     }
 }
