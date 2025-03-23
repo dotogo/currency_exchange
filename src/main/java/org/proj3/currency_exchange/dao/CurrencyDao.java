@@ -3,6 +3,7 @@ package org.proj3.currency_exchange.dao;
 import org.proj3.currency_exchange.entity.CurrencyEntity;
 import org.proj3.currency_exchange.exception.DaoException;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.List;
 import java.util.Optional;
@@ -14,8 +15,6 @@ public class CurrencyDao extends AbstractDao<CurrencyEntity> {
     private static final String RETRIEVING_ID_FAILED = "Failed to retrieve generated ID.";
     private static final String ERROR_SAVING_CURRENCY = "Error saving currency";
 
-    private static final CurrencyDao instance = new CurrencyDao();
-
     private static final String FIND_ALL_SQL = """
                 SELECT id, code, full_name, sign
                 FROM currencies
@@ -26,11 +25,12 @@ public class CurrencyDao extends AbstractDao<CurrencyEntity> {
             VALUES (?, ?, ?)
             """;
 
-    private CurrencyDao() {
+    private CurrencyDao(DataSource dataSource) {
+        super(dataSource);
     }
 
-    public static CurrencyDao getInstance() {
-        return CurrencyDao.instance;
+    public static CurrencyDao createInstance(DataSource dataSource) {
+        return new CurrencyDao(dataSource);
     }
 
     public List<CurrencyEntity> findAll() {

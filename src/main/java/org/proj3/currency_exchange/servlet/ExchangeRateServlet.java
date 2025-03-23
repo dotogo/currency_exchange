@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.ExchangeRateServiceException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
@@ -35,7 +36,7 @@ public class ExchangeRateServlet extends BaseServlet {
     private static final String ERROR_READING_REQUEST_BODY = "Error reading request body";
     private static final String RATE = "rate";
 
-    private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
+    private final ExchangeRateService exchangeRateService = AppConfig.getExchangeRateService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {

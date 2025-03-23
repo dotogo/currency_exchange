@@ -3,6 +3,7 @@ package org.proj3.currency_exchange.servlet;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.exception.CurrencyServiceException;
 import org.proj3.currency_exchange.service.CurrencyService;
@@ -16,7 +17,7 @@ public class CurrencyServlet extends BaseServlet {
     private static final String CURRENCY_CODE_MISSING = "The currency code is missing in the request.";
     private static final String CURRENCY_NOT_FOUND = "Currency not found.";
 
-    CurrencyService currencyService = CurrencyService.getInstance();
+    CurrencyService currencyService = AppConfig.getCurrencyService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {

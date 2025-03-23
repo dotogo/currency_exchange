@@ -11,8 +11,6 @@ import org.proj3.currency_exchange.util.CurrencyUtil;
 import java.util.*;
 
 public class CurrencyService {
-    private static final CurrencyService instance = new CurrencyService();
-    private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
 
     private static final String ERROR_FINDING_BY_CODE = ">>> Something went wrong while finding for currency by code :( <<<";
     private static final String ERROR_FINDING_ALL_CURRENCIES = ">>> Something went wrong while finding all currencies :( <<<";
@@ -20,9 +18,16 @@ public class CurrencyService {
     private static final String VALID_CURRENCY_NAME = "Invalid currency name. The only correct name for this code is: ";
     private static final String VALID_CURRENCY_SIGN = "Invalid currency name. The only correct sign for this code is: ";
 
-    private final CurrencyMapper mapper = CurrencyMapper.getInstance();
+    private final CurrencyDao currencyDao;
+    private final CurrencyMapper mapper;
 
-    private CurrencyService() {
+    private CurrencyService(CurrencyDao currencyDao, CurrencyMapper mapper) {
+        this.currencyDao = currencyDao;
+        this.mapper = mapper;
+    }
+
+    public static CurrencyService createInstance(CurrencyDao currencyDao, CurrencyMapper mapper) {
+        return new CurrencyService(currencyDao, mapper);
     }
 
     public List<CurrencyResponseDto> findAll() {
@@ -85,10 +90,6 @@ public class CurrencyService {
         } catch (Exception e) {
             throw new CurrencyServiceException(ERROR_SAVING_CURRENCY, e);
         }
-    }
-
-    public static CurrencyService getInstance() {
-        return instance;
     }
 
     private boolean isCurrencyNameInvalid(String displayName, String currencyName) {

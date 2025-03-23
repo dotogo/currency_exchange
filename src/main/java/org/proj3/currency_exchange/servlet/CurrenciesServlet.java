@@ -3,6 +3,7 @@ package org.proj3.currency_exchange.servlet;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.CurrencyRequestDto;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.exception.*;
@@ -31,7 +32,7 @@ public class CurrenciesServlet extends BaseServlet {
     private static final String CURRENCY_CANNOT_BE_ADDED = "Currency cannot be added. ";
     private static final String DATABASE_ERROR = "Database error. ";
 
-    private final CurrencyService currencyService = CurrencyService.getInstance();
+    private final CurrencyService currencyService = AppConfig.getCurrencyService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {

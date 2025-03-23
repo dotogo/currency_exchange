@@ -1,7 +1,6 @@
 package org.proj3.currency_exchange.dao;
 
 import org.proj3.currency_exchange.exception.DaoException;
-import org.proj3.currency_exchange.util.DatabaseConfig;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -12,7 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractDao <T> {
-    protected static final DataSource dataSource = DatabaseConfig.getDataSource();
+    protected final DataSource dataSource;
+
+    protected AbstractDao(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
     protected List<T> findAll(String sql, String errorMessage) {
         List<T> entities = new ArrayList<>();

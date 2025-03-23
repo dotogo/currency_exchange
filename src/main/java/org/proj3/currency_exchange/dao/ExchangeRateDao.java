@@ -3,7 +3,6 @@ package org.proj3.currency_exchange.dao;
 import org.proj3.currency_exchange.entity.CurrencyEntity;
 import org.proj3.currency_exchange.entity.ExchangeRateEntity;
 import org.proj3.currency_exchange.exception.DaoException;
-import org.proj3.currency_exchange.util.DatabaseConfig;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
@@ -12,8 +11,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity> {
-    private static final  ExchangeRateDao instance = new ExchangeRateDao();
-//    private static final DataSource dataSource = DatabaseConfig.getDataSource();
 
     private static final String BASE_QUERY = """
             SELECT
@@ -59,11 +56,12 @@ public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity> {
     private static final String UPDATE_ERROR_STATEMENT = "Failed to update exchange rate. PreparedStatement.";
     private static final String UPDATE_ERROR = "Failed to update exchange rate";
 
-    private ExchangeRateDao() {
+    private ExchangeRateDao(DataSource dataSource) {
+        super(dataSource);
     }
 
-    public static ExchangeRateDao getInstance() {
-        return instance;
+    public static ExchangeRateDao createInstance(DataSource dataSource) {
+        return new ExchangeRateDao(dataSource);
     }
 
     public List<ExchangeRateEntity> findAll() {

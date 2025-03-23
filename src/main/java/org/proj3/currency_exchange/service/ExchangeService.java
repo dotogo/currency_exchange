@@ -9,7 +9,6 @@ import java.math.RoundingMode;
 import java.util.Optional;
 
 public class ExchangeService {
-    private static final ExchangeService instance = new ExchangeService();
 
     private static final String AMOUNT_ERROR_MESSAGE = "Please enter a valid amount: a number greater than 0," +
                                                        " less than a billion, no more than 6 decimal places (will be rounded to 2 digits).";
@@ -21,14 +20,15 @@ public class ExchangeService {
     private static final int CONVERTED_AMOUNT_SCALE = 2;
     private static final int DECIMAL_PLACES = 6;
 
-    private final ExchangeRateService rateService = ExchangeRateService.getInstance();
+    private final ExchangeRateService rateService;
 
-    private ExchangeService() {
+    private ExchangeService(ExchangeRateService rateService) {
+        this.rateService = rateService;
 
     }
 
-    public static ExchangeService getInstance() {
-        return instance;
+    public static ExchangeService createInstance(ExchangeRateService rateService) {
+        return new ExchangeService(rateService);
     }
 
     public BigDecimal validateAmount(String amount) {

@@ -1,7 +1,8 @@
-package org.proj3.currency_exchange.util;
+package org.proj3.currency_exchange.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.proj3.currency_exchange.util.PropertiesUtil;
 import org.sqlite.SQLiteDataSource;
 
 import javax.sql.DataSource;

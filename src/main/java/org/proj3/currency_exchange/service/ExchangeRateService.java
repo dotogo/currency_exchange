@@ -17,9 +17,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ExchangeRateService {
-    private static final ExchangeRateService instance = new ExchangeRateService();
-    private static final ExchangeRateDao exchangeRateDao = ExchangeRateDao.getInstance();
-    private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
 
     private static final String INVALID_CURRENCY_PAIR_LENGTH = "Invalid length of currency pair code. " +
                                                               "Please enter exactly 6 characters with real currency codes.";
@@ -33,14 +30,19 @@ public class ExchangeRateService {
     private static final int MAX_RATE_INTEGER_DIGITS = 6;
     private static final int MAX_RATE_FRACTIONAL_DIGITS = 6;
 
-    private final ExchangeRateMapper mapper = ExchangeRateMapper.getInstance();
+    private final ExchangeRateDao exchangeRateDao;
+    private final CurrencyDao currencyDao;
+    private final ExchangeRateMapper mapper;
 
-    private ExchangeRateService() {
+    private ExchangeRateService(ExchangeRateDao exchangeRateDao, CurrencyDao currencyDao, ExchangeRateMapper mapper) {
+        this.exchangeRateDao = exchangeRateDao;
+        this.currencyDao = currencyDao;
+        this.mapper = mapper;
 
     }
 
-    public static ExchangeRateService getInstance() {
-        return instance;
+    public static ExchangeRateService createInstance(ExchangeRateDao exchangeRateDao, CurrencyDao currencyDao, ExchangeRateMapper mapper) {
+        return new ExchangeRateService(exchangeRateDao, currencyDao, mapper);
     }
 
     public List<ExchangeRateResponseDto> findAll() {

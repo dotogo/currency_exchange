@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.dto.ExchangeDto;
 import org.proj3.currency_exchange.exception.ExchangeServiceException;
@@ -37,8 +38,8 @@ public class ExchangeServlet extends BaseServlet {
     private static final String IO_ERROR = "Input/output data error. ";
 
 
-    private final CurrencyService currencyService = CurrencyService.getInstance();
-    private final ExchangeService exchangeService = ExchangeService.getInstance();
+    private final CurrencyService currencyService = AppConfig.getCurrencyService();
+    private final ExchangeService exchangeService = AppConfig.getExchangeService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {

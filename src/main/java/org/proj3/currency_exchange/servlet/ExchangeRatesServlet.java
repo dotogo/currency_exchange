@@ -3,6 +3,7 @@ package org.proj3.currency_exchange.servlet;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.ExchangeRateRequestDto;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.*;
@@ -27,7 +28,7 @@ public class ExchangeRatesServlet extends BaseServlet {
     private static final String TARGET_CURRENCY_PARAMETER = "targetCurrencyCode";
     private static final String RATE_PARAMETER = "rate";
 
-    private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
+    private final ExchangeRateService exchangeRateService = AppConfig.getExchangeRateService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
