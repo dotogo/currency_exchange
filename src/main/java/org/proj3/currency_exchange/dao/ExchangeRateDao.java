@@ -51,6 +51,7 @@ public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity> {
     private static final String FINDING_ALL_ERROR = "Error while finding exchange rates.";
     private static final String FINDING_ERROR = "Error finding exchange rate by code pair.";
     private static final String NO_ROWS_AFFECTED_ERROR = "Saving exchange rate failed, no rows affected.";
+    private static final String NO_EXCHANGE_RATE = "There is no exchange rate for the currency pair.";
     private static final String GENERATED_ID_RETRIEVING_ERROR = "Failed to retrieve generated ID.";
     private static final String SAVING_ERROR = "Error saving exchange rate.";
     private static final String UPDATE_ERROR_STATEMENT = "Failed to update exchange rate. PreparedStatement.";
@@ -132,7 +133,7 @@ public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity> {
 
             int affectedRows = preparedStatement.executeUpdate();
             if (affectedRows == 0) {
-                throw new DaoException(NO_ROWS_AFFECTED_ERROR);
+                throw new DaoException(NO_EXCHANGE_RATE);
             }
 
             String selectSql = BASE_QUERY + FIND_BY_CURRENCY_ID_WHERE;

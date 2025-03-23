@@ -122,7 +122,7 @@ public class ExchangeRateService {
             ExchangeRateEntity updatedRate = exchangeRateDao.update(baseCurrencyId, targetCurrencyId, exchangeRate);
             return Optional.of(mapper.toDto(updatedRate));
 
-        } catch (IllegalCurrencyCodeException | IllegalArgumentException e) {
+        } catch (DaoException | IllegalCurrencyCodeException | IllegalArgumentException e) {
             throw new ExchangeRateServiceException(e.getMessage(), e);
         }
     }
