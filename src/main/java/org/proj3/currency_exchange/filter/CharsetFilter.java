@@ -6,7 +6,9 @@ import jakarta.servlet.annotation.WebFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-@WebFilter("/*")
+@WebFilter(value = {
+        "/currencies", "/currency/*", "/exchangeRate/*", "/exchangeRates", "/exchange"
+})
 public class CharsetFilter implements Filter {
 
     @Override
