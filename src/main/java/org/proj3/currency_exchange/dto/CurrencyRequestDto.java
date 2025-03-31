@@ -5,10 +5,6 @@ public class CurrencyRequestDto {
     private String name;
     private String sign;
 
-    public CurrencyRequestDto() {
-
-    }
-
     public CurrencyRequestDto(String code, String name, String sign) {
         this.code = code;
         this.name = name;
