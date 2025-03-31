@@ -2,11 +2,11 @@ package org.proj3.currency_exchange.util;
 
 import java.math.BigDecimal;
 
-public class ExchangeUtil {
+public final class ExchangeUtil {
     private static final String INVALID_NUMBER_FORMAT = "Invalid number format.";
 
     private ExchangeUtil() {
-
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 
     public static BigDecimal validatePositiveNumber(String number, int maxInteger, int maxFractional, String errorMessage) {

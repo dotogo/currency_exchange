@@ -1,17 +1,18 @@
 package org.proj3.currency_exchange.util;
 
-import lombok.experimental.UtilityClass;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-@UtilityClass
-public class PropertiesUtil {
+public final class PropertiesUtil {
     private static final Properties PROPERTIES = new Properties();
 
     static {
         loadProperties();
+    }
+
+    private PropertiesUtil() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 
     public static String get(String key) {

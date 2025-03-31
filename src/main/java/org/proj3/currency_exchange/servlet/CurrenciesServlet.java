@@ -8,7 +8,7 @@ import org.proj3.currency_exchange.dto.CurrencyRequestDto;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.exception.*;
 import org.proj3.currency_exchange.service.CurrencyService;
-import org.proj3.currency_exchange.util.JsonUtill;
+import org.proj3.currency_exchange.util.JsonUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -38,7 +38,7 @@ public class CurrenciesServlet extends BaseServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
                 try {
             List<CurrencyResponseDto> currencies = currencyService.findAll();
-            String json = JsonUtill.toJson(currencies);
+            String json = JsonUtil.toJson(currencies);
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(json);
@@ -89,7 +89,7 @@ public class CurrenciesServlet extends BaseServlet {
             if (savedDtoOptional.isPresent()) {
                 CurrencyResponseDto currencyResponseDto = savedDtoOptional.get();
 
-                String json = JsonUtill.toJson(currencyResponseDto);
+                String json = JsonUtil.toJson(currencyResponseDto);
 
                 resp.setStatus(HttpServletResponse.SC_CREATED);
                 resp.getWriter().write(json);

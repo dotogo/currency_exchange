@@ -11,7 +11,7 @@ import org.proj3.currency_exchange.exception.ExchangeServiceException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.CurrencyService;
 import org.proj3.currency_exchange.service.ExchangeService;
-import org.proj3.currency_exchange.util.JsonUtill;
+import org.proj3.currency_exchange.util.JsonUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -123,7 +123,7 @@ public class ExchangeServlet extends BaseServlet {
     }
 
     private void sendOkResponse(HttpServletResponse resp, ExchangeDto exchangeDto) throws IOException {
-        String json = JsonUtill.toJson(exchangeDto);
+        String json = JsonUtil.toJson(exchangeDto);
 
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.getWriter().write(json);

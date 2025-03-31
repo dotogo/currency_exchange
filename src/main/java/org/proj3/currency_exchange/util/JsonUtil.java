@@ -3,11 +3,11 @@ package org.proj3.currency_exchange.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonUtill {
+public final class JsonUtil {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private JsonUtill() {
-
+    private JsonUtil() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 
     public static String toJson(Object obj) throws JsonProcessingException {

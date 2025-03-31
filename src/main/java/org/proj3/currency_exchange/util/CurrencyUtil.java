@@ -4,11 +4,11 @@ import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 
 import java.util.Currency;
 
-public class CurrencyUtil {
+public final class CurrencyUtil {
     private static final String INVALID_CURRENCY_CODE = "Invalid currency code. Only real currency codes can be used.";
 
     private CurrencyUtil() {
-
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 
     public static void validateCurrencyCode(String currencyCode) {

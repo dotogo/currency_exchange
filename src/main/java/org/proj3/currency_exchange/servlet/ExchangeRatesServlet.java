@@ -8,7 +8,7 @@ import org.proj3.currency_exchange.dto.ExchangeRateRequestDto;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.*;
 import org.proj3.currency_exchange.service.ExchangeRateService;
-import org.proj3.currency_exchange.util.JsonUtill;
+import org.proj3.currency_exchange.util.JsonUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -34,7 +34,7 @@ public class ExchangeRatesServlet extends BaseServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             List<ExchangeRateResponseDto> exchangeRates = exchangeRateService.findAll();
-            String json = JsonUtill.toJson(exchangeRates);
+            String json = JsonUtil.toJson(exchangeRates);
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(json);
@@ -78,7 +78,7 @@ public class ExchangeRatesServlet extends BaseServlet {
 
         try {
                 ExchangeRateResponseDto rateResponseDto = exchangeRateService.save(requestDto);
-                String json = JsonUtill.toJson(rateResponseDto);
+                String json = JsonUtil.toJson(rateResponseDto);
 
                 resp.setStatus(HttpServletResponse.SC_CREATED);
                 resp.getWriter().write(json);

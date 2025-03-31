@@ -7,7 +7,7 @@ import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.exception.CurrencyServiceException;
 import org.proj3.currency_exchange.service.CurrencyService;
-import org.proj3.currency_exchange.util.JsonUtill;
+import org.proj3.currency_exchange.util.JsonUtil;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -32,7 +32,7 @@ public class CurrencyServlet extends BaseServlet {
             Optional<CurrencyResponseDto> dtoOptional = currencyService.findByCode(unverifiedCurrencyCode);
             if (dtoOptional.isPresent()) {
                 CurrencyResponseDto responseDto = dtoOptional.get();
-                String json = JsonUtill.toJson(responseDto);
+                String json = JsonUtil.toJson(responseDto);
 
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.getWriter().write(json);
