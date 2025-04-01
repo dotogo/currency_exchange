@@ -30,6 +30,7 @@ public class ExchangeServlet extends BaseServlet {
     private static final String TO_FIELD_EMPTY = "The \"%s\" field is empty. Please provide the target currency code.".formatted(PARAMETER_TO);
     private static final String AMOUNT_FIELD_EMPTY = "The \"%s\" field is empty. Please specify the amount.".formatted(PARAMETER_AMOUNT);
 
+    private static final String USE_DIFFERENT_CURRENCIES = "Use different currencies for conversion.";
     private static final String NO_CURRENCY_IN_DATABASE = "Currency with code \"%s\" is not in the database. Please add currency before conversion.";
     private static final String NO_EXCHANGE_RATES_IN_DATABASE = "Currency exchange is not available. " +
                                                                 "There is no direct, reverse or cross exchange rate (via USD) in the database.";
@@ -58,6 +59,11 @@ public class ExchangeServlet extends BaseServlet {
             String from = paramsToCheck.get(0).value();
             String to = paramsToCheck.get(1).value();
             String amount = paramsToCheck.get(2).value();
+
+            if (from.equals(to)) {
+                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, USE_DIFFERENT_CURRENCIES);
+                return;
+            }
 
             Optional<CurrencyResponseDto> baseDto = currencyService.findByCode(from);
             if (baseDto.isEmpty()) {
