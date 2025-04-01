@@ -72,24 +72,49 @@ public class CurrencyService {
         String displayName = currency.getDisplayName(Locale.US);
         String symbol = currency.getSymbol(Locale.US);
 
-        if (isCurrencyNameInvalid(displayName, currencyRequestDto.getName())) {
+        String dtoName = normalizeName(currencyRequestDto.getName());
+        String dtoSign = currencyRequestDto.getSign().trim().toUpperCase();
+
+        if (isCurrencyNameInvalid(displayName, dtoName)) {
             throw new IllegalCurrencyNameException(VALID_CURRENCY_NAME + displayName);
         }
 
-        if (isCurrencySignInvalid(symbol, currencyRequestDto.getSign())) {
+        if (isCurrencySignInvalid(symbol, dtoSign)) {
             throw new IllegalCurrencySignException(VALID_CURRENCY_SIGN + symbol);
         }
 
         try {
             currencyRequestDto.setCode(code);
+            currencyRequestDto.setName(dtoName);
+            currencyRequestDto.setSign(dtoSign);
+
             CurrencyEntity entity = mapper.toEntity(currencyRequestDto);
             CurrencyEntity savedCurrency = currencyDao.save(entity);
             CurrencyResponseDto responseDto = mapper.toDto(savedCurrency);
+
             return Optional.of(responseDto);
 
         } catch (Exception e) {
             throw new CurrencyServiceException(ERROR_SAVING_CURRENCY, e);
         }
+    }
+
+    private String normalizeName(String name) {
+        name = removeExtraSpaces(name);
+        return capitalizeFirstLetters(name);
+    }
+
+    private String removeExtraSpaces(String name) {
+        return name.trim().replaceAll("\\s+", " ");
+    }
+
+    private String capitalizeFirstLetters(String name) {
+        String[] split = name.toLowerCase().split(" ");
+
+        for (int i = 0; i < split.length; i++) {
+            split[i] = split[i].substring(0, 1).toUpperCase() + split[i].substring(1);
+        }
+        return String.join(" ", split);
     }
 
     private boolean isCurrencyNameInvalid(String displayName, String currencyName) {
