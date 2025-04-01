@@ -12,6 +12,8 @@ public final class ExchangeUtil {
     public static BigDecimal validatePositiveNumber(String number, int maxInteger, int maxFractional, String errorMessage) {
         BigDecimal value = null;
         try {
+            number = number.trim();
+            number = number.replace(',', '.');
             value = new BigDecimal(number);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(INVALID_NUMBER_FORMAT);
