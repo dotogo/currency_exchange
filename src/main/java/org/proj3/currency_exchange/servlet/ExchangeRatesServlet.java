@@ -105,6 +105,7 @@ public class ExchangeRatesServlet extends BaseServlet {
 
     private boolean validateAndSendErrorWhenRateNotNumber(String parameterRate, HttpServletResponse resp) throws IOException {
         try {
+            parameterRate = parameterRate.trim().replaceAll(",", ".");
             new BigDecimal(parameterRate);
             return false;
         } catch (NumberFormatException e) {

@@ -116,6 +116,7 @@ public class ExchangeRateServlet extends BaseServlet {
         String rateFromParameter = parameters.get(RATE);
 
         try {
+            rateFromParameter = rateFromParameter.trim().replaceAll(",", ".");
             BigDecimal exchangeRate = new BigDecimal(rateFromParameter);
 
             Optional<ExchangeRateResponseDto> updatedRateDtoOptional = exchangeRateService.update(currencyPair, exchangeRate);
