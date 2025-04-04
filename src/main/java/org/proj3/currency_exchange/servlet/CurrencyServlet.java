@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.exception.CurrencyServiceException;
+import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.CurrencyService;
 import org.proj3.currency_exchange.util.JsonUtil;
 
@@ -39,6 +40,8 @@ public class CurrencyServlet extends BaseServlet {
             } else {
                 sendErrorResponse(resp, HttpServletResponse.SC_NOT_FOUND, CURRENCY_NOT_FOUND);
             }
+        } catch (IllegalCurrencyCodeException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (CurrencyServiceException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
