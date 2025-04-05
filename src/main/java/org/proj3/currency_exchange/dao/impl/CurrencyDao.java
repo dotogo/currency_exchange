@@ -2,6 +2,9 @@ package org.proj3.currency_exchange.dao.impl;
 
 import org.proj3.currency_exchange.entity.CurrencyEntity;
 import org.proj3.currency_exchange.exception.DaoException;
+import org.proj3.currency_exchange.exception.EntityExistsException;
+import org.sqlite.SQLiteErrorCode;
+import org.sqlite.SQLiteException;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -12,7 +15,7 @@ public class CurrencyDao extends AbstractDao<CurrencyEntity, String> {
     private static final String FINDING_ERROR = "Error finding currency by code";
     private static final String NO_ROWS_AFFECTED = "Saving currency failed, no rows affected.";
     private static final String RETRIEVING_ID_FAILED = "Failed to retrieve generated ID.";
-    private static final String ERROR_SAVING_CURRENCY = "Error saving currency";
+    private static final String ERROR_SAVING_CURRENCY = "Error saving currency to the database";
 
     private static final String FIND_ALL_SQL = """
                 SELECT id, code, full_name, sign
@@ -81,6 +84,11 @@ public class CurrencyDao extends AbstractDao<CurrencyEntity, String> {
             return currency;
 
         } catch (SQLException e) {
+            if (e instanceof SQLiteException exception) {
+                if (exception.getResultCode().code == SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE.code) {
+                    throw new EntityExistsException("Currency with code '" + currency.getCode() + "' already exists");
+                }
+            }
             throw new DaoException(ERROR_SAVING_CURRENCY, e);
         }
     }

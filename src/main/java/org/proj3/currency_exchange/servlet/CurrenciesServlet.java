@@ -28,9 +28,7 @@ public class CurrenciesServlet extends BaseServlet {
     private static final String CODE_EMPTY = "Code cannot be empty.";
     private static final String SIGN_EMPTY = "Sign cannot be empty.";
 
-    private static final String CURRENCY_ALREADY_EXISTS = "A currency with this code already exists.";
     private static final String CURRENCY_CANNOT_BE_ADDED = "Currency cannot be added. ";
-    private static final String DATABASE_ERROR = "Database error. ";
 
     private final CurrencyService currencyService = AppConfig.getCurrencyService();
 
@@ -77,32 +75,22 @@ public class CurrenciesServlet extends BaseServlet {
         }
 
         try {
-            Optional<CurrencyResponseDto> dtoOptional = currencyService.findByCode(code);
-            if (dtoOptional.isPresent()) {
-                sendErrorResponse(resp, HttpServletResponse.SC_CONFLICT, CURRENCY_ALREADY_EXISTS);
-                return;
-            }
-
             CurrencyRequestDto requestDto = new CurrencyRequestDto(code, name, sign);
+            CurrencyResponseDto responseDto = currencyService.save(requestDto);
 
-            Optional<CurrencyResponseDto> savedDtoOptional = currencyService.save(requestDto);
-            if (savedDtoOptional.isPresent()) {
-                CurrencyResponseDto currencyResponseDto = savedDtoOptional.get();
+            String json = JsonUtil.toJson(responseDto);
 
-                String json = JsonUtil.toJson(currencyResponseDto);
-
-                resp.setStatus(HttpServletResponse.SC_CREATED);
-                resp.getWriter().write(json);
-            }
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.getWriter().write(json);
 
         } catch (IllegalCurrencyCodeException | IllegalCurrencyNameException | IllegalCurrencySignException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, CURRENCY_CANNOT_BE_ADDED + e.getMessage());
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, CURRENCY_CANNOT_BE_ADDED + e.getMessage());
 
-        } catch (DaoException | CurrencyServiceException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, DATABASE_ERROR + e.getMessage());
+        } catch (EntityExistsException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_CONFLICT, e.getMessage());
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (DaoException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 }
