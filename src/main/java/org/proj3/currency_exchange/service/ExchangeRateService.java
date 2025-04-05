@@ -46,14 +46,11 @@ public class ExchangeRateService {
     }
 
     public List<ExchangeRateResponseDto> findAll() {
-        try {
-            List<ExchangeRateEntity> rateEntities = exchangeRateDao.findAll();
-            return rateEntities.stream()
-                    .map(mapper::toDto)
-                    .collect(Collectors.toList());
-        } catch (DaoException e) {
-            throw new ExchangeRateServiceException(e.getMessage(), e);
-        }
+        List<ExchangeRateEntity> rateEntities = exchangeRateDao.findAll();
+
+        return rateEntities.stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
     }
 
     public Optional<ExchangeRateResponseDto> findByCode(String currencyPair) {
@@ -80,21 +77,20 @@ public class ExchangeRateService {
         String baseCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getBaseCurrencyCode());
         String targetCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getTargetCurrencyCode());
 
-        try {
-            CurrencyEntity baseCurrency = currencyDao.find(baseCurrencyCode)
-                    .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
+        CurrencyUtil.validateCurrencyCode(baseCurrencyCode);
+        CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
+        validateExchangeRate(exchangeRate);
 
-            CurrencyEntity targetCurrency = currencyDao.find(targetCurrencyCode)
-                    .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
+        CurrencyEntity baseCurrency = currencyDao.find(baseCurrencyCode)
+                .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
 
-            ExchangeRateEntity rate = new ExchangeRateEntity(baseCurrency, targetCurrency, exchangeRate);
-            ExchangeRateEntity savedRate = exchangeRateDao.save(rate);
+        CurrencyEntity targetCurrency = currencyDao.find(targetCurrencyCode)
+                .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
 
-            return mapper.toDto(savedRate);
+        ExchangeRateEntity rate = new ExchangeRateEntity(baseCurrency, targetCurrency, exchangeRate);
+        ExchangeRateEntity savedRate = exchangeRateDao.save(rate);
 
-        } catch (DaoException e) {
-            throw new ExchangeRateServiceException(e.getMessage(), e);
-        }
+        return mapper.toDto(savedRate);
     }
 
     public Optional<ExchangeRateResponseDto> update(String currencyPair, BigDecimal exchangeRate) {
@@ -127,17 +123,7 @@ public class ExchangeRateService {
         }
     }
 
-    public BigDecimal validateExchangeRate(String rate) {
-        try {
-            return ExchangeUtil.validatePositiveNumber(
-                    rate, MAX_RATE_INTEGER_DIGITS, MAX_RATE_FRACTIONAL_DIGITS, RATE_ERROR_MESSAGE);
-
-        } catch (IllegalArgumentException e) {
-            throw new ExchangeRateServiceException(e.getMessage(), e);
-        }
-    }
-
-    private void validateExchangeRate(BigDecimal rate) throws IllegalArgumentException {
+    private void validateExchangeRate(BigDecimal rate) {
             ExchangeUtil.validatePositiveNumber(
                     rate, MAX_RATE_INTEGER_DIGITS, MAX_RATE_FRACTIONAL_DIGITS, RATE_ERROR_MESSAGE);
     }

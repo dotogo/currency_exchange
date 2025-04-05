@@ -8,6 +8,7 @@ import org.proj3.currency_exchange.dto.ExchangeRateRequestDto;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.*;
 import org.proj3.currency_exchange.service.ExchangeRateService;
+import org.proj3.currency_exchange.util.CurrencyUtil;
 import org.proj3.currency_exchange.util.JsonUtil;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class ExchangeRatesServlet extends BaseServlet {
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(json);
-        } catch (ExchangeRateServiceException e) {
+        } catch (DaoException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
@@ -52,42 +53,25 @@ public class ExchangeRatesServlet extends BaseServlet {
 
         String baseCurrencyCode = req.getParameter(BASE_CURRENCY_PARAMETER);
         String targetCurrencyCode = req.getParameter(TARGET_CURRENCY_PARAMETER);
-        String parameterRate = req.getParameter(RATE_PARAMETER);
-
-        BigDecimal exchangeRate;
+        BigDecimal rate = new BigDecimal(req.getParameter(RATE_PARAMETER));
 
         try {
-            exchangeRate = exchangeRateService.validateExchangeRate(parameterRate);
-            String currencyPair = baseCurrencyCode + targetCurrencyCode;
-            Optional<ExchangeRateResponseDto> dtoOptional = exchangeRateService.findByCode(currencyPair);
+            ExchangeRateRequestDto requestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
 
-            if (dtoOptional.isPresent()) {
-                sendErrorResponse(resp, HttpServletResponse.SC_CONFLICT, PAIR_ALREADY_EXISTS);
-                return;
-            }
-        } catch (IllegalExchangeRateException | IllegalCurrencyCodeException e) {
+            ExchangeRateResponseDto rateResponseDto = exchangeRateService.save(requestDto);
+            String json = JsonUtil.toJson(rateResponseDto);
+
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.getWriter().write(json);
+
+        } catch (IllegalCurrencyCodeException | IllegalArgumentException | ExchangeRateServiceException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+
+        } catch (EntityExistsException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_CONFLICT, e.getMessage());
+
+        } catch (DaoException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-            return;
-
-        } catch (ExchangeRateServiceException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-            return;
-        }
-
-        ExchangeRateRequestDto requestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, exchangeRate);
-
-        try {
-                ExchangeRateResponseDto rateResponseDto = exchangeRateService.save(requestDto);
-                String json = JsonUtil.toJson(rateResponseDto);
-
-                resp.setStatus(HttpServletResponse.SC_CREATED);
-                resp.getWriter().write(json);
-
-        } catch (IllegalExchangeRateException | ExchangeRateServiceException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -109,7 +93,7 @@ public class ExchangeRatesServlet extends BaseServlet {
             new BigDecimal(parameterRate);
             return false;
         } catch (NumberFormatException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INVALID_EXCHANGE_RATE);
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_EXCHANGE_RATE);
             return true;
         }
     }

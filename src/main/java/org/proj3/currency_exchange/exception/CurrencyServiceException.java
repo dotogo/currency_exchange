@@ -6,7 +6,4 @@ public class CurrencyServiceException extends RuntimeException {
         super(message, cause);
     }
 
-    public CurrencyServiceException(Throwable cause) {
-        super(cause);
-    }
 }

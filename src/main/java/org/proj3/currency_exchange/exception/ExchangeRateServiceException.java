@@ -9,7 +9,5 @@ public class ExchangeRateServiceException extends RuntimeException {
     public ExchangeRateServiceException(String message) {
         super(message);
     }
-    public ExchangeRateServiceException(Throwable cause) {
-        super(cause);
-    }
+
 }

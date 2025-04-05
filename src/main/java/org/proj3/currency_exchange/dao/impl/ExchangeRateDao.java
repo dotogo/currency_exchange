@@ -3,6 +3,9 @@ package org.proj3.currency_exchange.dao.impl;
 import org.proj3.currency_exchange.entity.CurrencyEntity;
 import org.proj3.currency_exchange.entity.ExchangeRateEntity;
 import org.proj3.currency_exchange.exception.DaoException;
+import org.proj3.currency_exchange.exception.EntityExistsException;
+import org.sqlite.SQLiteErrorCode;
+import org.sqlite.SQLiteException;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
@@ -114,6 +117,14 @@ public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity, String> {
             }
             return exchangeRate;
         } catch (SQLException e) {
+            if (e instanceof SQLiteException exception) {
+                if (exception.getResultCode().code == SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE.code) {
+                    throw new EntityExistsException(
+                            "Exchange rate '%s' to '%s' already exists"
+                                    .formatted(exchangeRate.getBaseCurrency().getCode(),
+                                            exchangeRate.getTargetCurrency().getCode()));
+                }
+            }
             throw new DaoException(SAVING_ERROR, e);
         }
     }
