@@ -4,6 +4,7 @@ import org.proj3.currency_exchange.entity.CurrencyEntity;
 import org.proj3.currency_exchange.entity.ExchangeRateEntity;
 import org.proj3.currency_exchange.exception.DaoException;
 import org.proj3.currency_exchange.exception.EntityExistsException;
+import org.proj3.currency_exchange.exception.NotFoundException;
 import org.sqlite.SQLiteErrorCode;
 import org.sqlite.SQLiteException;
 
@@ -139,7 +140,7 @@ public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity, String> {
 
             int affectedRows = preparedStatement.executeUpdate();
             if (affectedRows == 0) {
-                throw new DaoException(NO_EXCHANGE_RATE);
+                throw new NotFoundException(NO_EXCHANGE_RATE);
             }
 
             String selectSql = BASE_QUERY + FIND_BY_CURRENCY_ID_WHERE;

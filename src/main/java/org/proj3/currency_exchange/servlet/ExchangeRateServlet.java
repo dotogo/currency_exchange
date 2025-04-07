@@ -9,6 +9,7 @@ import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.DaoException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
+import org.proj3.currency_exchange.exception.NotFoundException;
 import org.proj3.currency_exchange.service.ExchangeRateService;
 import org.proj3.currency_exchange.util.JsonUtil;
 
@@ -116,23 +117,23 @@ public class ExchangeRateServlet extends BaseServlet {
 
         try {
             BigDecimal exchangeRate = new BigDecimal(rateFromParameter);
+            ExchangeRateResponseDto response = exchangeRateService.update(currencyPair, exchangeRate);
 
-            Optional<ExchangeRateResponseDto> updatedRateDtoOptional = exchangeRateService.update(currencyPair, exchangeRate);
+            String json = JsonUtil.toJson(response);
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(json);
 
-            if (updatedRateDtoOptional.isPresent()) {
-                ExchangeRateResponseDto responseDto = updatedRateDtoOptional.get();
-                String json = JsonUtil.toJson(responseDto);
-
-                resp.setStatus(HttpServletResponse.SC_OK);
-                resp.getWriter().write(json);
-            } else {
-                sendErrorResponse(resp, HttpServletResponse.SC_NOT_FOUND, CURRENCY_PAIR_IS_ABSENT);
-            }
         } catch (NumberFormatException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_EXCHANGE_RATE);
 
-        } catch (DaoException | IllegalCurrencyCodeException | IllegalArgumentException e) {
+        } catch (IllegalCurrencyCodeException | IllegalArgumentException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+
+        } catch (NotFoundException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+
+        } catch (DaoException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -171,8 +172,8 @@ public class ExchangeRateServlet extends BaseServlet {
         return false;
     }
 
-    private boolean isCurrencyPairEmpty(String unverifiedCurrencyPair) {
-        return unverifiedCurrencyPair == null || unverifiedCurrencyPair.equals("/");
+    private boolean isCurrencyPairEmpty(String currencyPair) {
+        return currencyPair == null || currencyPair.equals("/");
     }
 
     private boolean validateAndSendErrorForEmptyRequestParameters(Map<String, String> parameterMap, HttpServletResponse resp) throws IOException {

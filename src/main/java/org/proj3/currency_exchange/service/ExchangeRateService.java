@@ -89,7 +89,7 @@ public class ExchangeRateService {
         return mapper.toDto(savedRate);
     }
 
-    public Optional<ExchangeRateResponseDto> update(String currencyPair, BigDecimal exchangeRate) {
+    public ExchangeRateResponseDto update(String currencyPair, BigDecimal exchangeRate) {
         currencyPair = CurrencyUtil.normalizeCurrencyCode(currencyPair);
 
         validatePairCodeLength(currencyPair);
@@ -102,16 +102,16 @@ public class ExchangeRateService {
         CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
 
         CurrencyEntity baseCurrency = currencyDao.find(baseCurrencyCode)
-                .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
+                .orElseThrow(() -> new NotFoundException(NO_BASE_CURRENCY));
 
         CurrencyEntity targetCurrency = currencyDao.find(targetCurrencyCode)
-                .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
+                .orElseThrow(() -> new NotFoundException(NO_TARGET_CURRENCY));
 
         int baseCurrencyId = baseCurrency.getId();
         int targetCurrencyId = targetCurrency.getId();
 
         ExchangeRateEntity updatedRate = exchangeRateDao.update(baseCurrencyId, targetCurrencyId, exchangeRate);
-        return Optional.of(mapper.toDto(updatedRate));
+        return mapper.toDto(updatedRate);
     }
 
     private void validateExchangeRate(BigDecimal rate) {
