@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.DaoException;
-import org.proj3.currency_exchange.exception.ExchangeRateServiceException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.ExchangeRateService;
 import org.proj3.currency_exchange.util.JsonUtil;
@@ -26,8 +25,6 @@ import java.util.Optional;
 public class ExchangeRateServlet extends BaseServlet {
     private static final String CURRENCY_CODES_MISSING_IN_ADDRESS = "Currency codes of the pair are missing in the address.";
     private static final String EXCHANGE_RATE_NOT_FOUND = "Exchange rate not found.";
-    private static final String JSON_ERROR = "Error processing JSON. ";
-    private static final String IO_ERROR = "Input/output data error. ";
     private static final String PARAMETER_IS_MISSING = "Missing required parameter: \"rate\"";
     private static final String EMPTY_RATE = "Rate cannot be empty.";
     private static final String INVALID_EXCHANGE_RATE = "Invalid exchange rate. " +
@@ -48,9 +45,9 @@ public class ExchangeRateServlet extends BaseServlet {
         }
 
         try {
-            Optional<ExchangeRateResponseDto> dtoOptional = exchangeRateService.findByCode(currencyPair);
-            if (dtoOptional.isPresent()) {
-                ExchangeRateResponseDto responseDto = dtoOptional.get();
+            Optional<ExchangeRateResponseDto> response = exchangeRateService.findByCode(currencyPair);
+            if (response.isPresent()) {
+                ExchangeRateResponseDto responseDto = response.get();
 
                 String json = JsonUtil.toJson(responseDto);
 
@@ -60,11 +57,10 @@ public class ExchangeRateServlet extends BaseServlet {
                 sendErrorResponse(resp, HttpServletResponse.SC_NOT_FOUND, EXCHANGE_RATE_NOT_FOUND);
             }
         } catch (IllegalCurrencyCodeException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+
+        } catch (DaoException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-        } catch (JsonProcessingException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, JSON_ERROR + e.getMessage());
-        } catch (IOException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, IO_ERROR + e.getMessage());
         }
     }
 
@@ -114,10 +110,11 @@ public class ExchangeRateServlet extends BaseServlet {
             return;
         }
 
-        String rateFromParameter = parameters.get(RATE);
+        String rateFromParameter = parameters.get(RATE)
+                .trim()
+                .replaceAll(",", ".");
 
         try {
-            rateFromParameter = rateFromParameter.trim().replaceAll(",", ".");
             BigDecimal exchangeRate = new BigDecimal(rateFromParameter);
 
             Optional<ExchangeRateResponseDto> updatedRateDtoOptional = exchangeRateService.update(currencyPair, exchangeRate);

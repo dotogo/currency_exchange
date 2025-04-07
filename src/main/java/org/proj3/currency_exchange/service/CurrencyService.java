@@ -55,6 +55,7 @@ public class CurrencyService {
 
     public CurrencyResponseDto save(CurrencyRequestDto currencyRequestDto) {
         String code = CurrencyUtil.normalizeCurrencyCode(currencyRequestDto.getCode());
+        CurrencyUtil.validateCurrencyCode(code);
 
         Currency currency = Currency.getInstance(code);
         String displayName = currency.getDisplayName(Locale.US);

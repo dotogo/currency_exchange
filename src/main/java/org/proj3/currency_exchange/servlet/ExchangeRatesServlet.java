@@ -8,14 +8,12 @@ import org.proj3.currency_exchange.dto.ExchangeRateRequestDto;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
 import org.proj3.currency_exchange.exception.*;
 import org.proj3.currency_exchange.service.ExchangeRateService;
-import org.proj3.currency_exchange.util.CurrencyUtil;
 import org.proj3.currency_exchange.util.JsonUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @WebServlet("/exchangeRates")
 public class ExchangeRatesServlet extends BaseServlet {
@@ -23,7 +21,6 @@ public class ExchangeRatesServlet extends BaseServlet {
     private static final String EMPTY_BASE_CURRENCY_CODE = "Base currency code cannot be empty.";
     private static final String EMPTY_TARGET_CURRENCY_CODE = "Target currency code cannot be empty.";
     private static final String EMPTY_RATE = "Rate cannot be empty.";
-    private static final String PAIR_ALREADY_EXISTS = "The currency pair already exists.";
     private static final String INVALID_EXCHANGE_RATE = "The exchange rate is not a number. Enter a positive number.";
     private static final String BASE_CURRENCY_PARAMETER = "baseCurrencyCode";
     private static final String TARGET_CURRENCY_PARAMETER = "targetCurrencyCode";
@@ -53,7 +50,11 @@ public class ExchangeRatesServlet extends BaseServlet {
 
         String baseCurrencyCode = req.getParameter(BASE_CURRENCY_PARAMETER);
         String targetCurrencyCode = req.getParameter(TARGET_CURRENCY_PARAMETER);
-        BigDecimal rate = new BigDecimal(req.getParameter(RATE_PARAMETER));
+
+        BigDecimal rate = new BigDecimal(
+                req.getParameter(RATE_PARAMETER)
+                        .trim()
+                        .replaceAll(",", "."));
 
         try {
             ExchangeRateRequestDto requestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
@@ -64,7 +65,7 @@ public class ExchangeRatesServlet extends BaseServlet {
             resp.setStatus(HttpServletResponse.SC_CREATED);
             resp.getWriter().write(json);
 
-        } catch (IllegalCurrencyCodeException | IllegalArgumentException | ExchangeRateServiceException e) {
+        } catch (IllegalCurrencyCodeException | IllegalArgumentException | NotFoundException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
 
         } catch (EntityExistsException e) {

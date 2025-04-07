@@ -13,7 +13,6 @@ import org.proj3.currency_exchange.util.JsonUtil;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @WebServlet("/currencies")
 public class CurrenciesServlet extends BaseServlet {

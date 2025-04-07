@@ -5,7 +5,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
-import org.proj3.currency_exchange.exception.CurrencyServiceException;
 import org.proj3.currency_exchange.exception.DaoException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.CurrencyService;

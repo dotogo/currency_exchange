@@ -21,8 +21,8 @@ public class ExchangeRateService {
     private static final String INVALID_CURRENCY_PAIR_LENGTH = "Invalid length of currency pair code. " +
                                                               "Please enter exactly 6 characters with real currency codes.";
 
-    private static final String NO_BASE_CURRENCY = "There is no base currency in the database.";
-    private static final String NO_TARGET_CURRENCY = "There is no target currency in the database.";
+    private static final String NO_BASE_CURRENCY = "There is no base currency in the database";
+    private static final String NO_TARGET_CURRENCY = "There is no target currency in the database";
 
     private static final String RATE_ERROR_MESSAGE = "Please enter a valid rate: a number greater than 0," +
                                                      " less than a million, no more than 6 decimal places.";
@@ -63,12 +63,8 @@ public class ExchangeRateService {
         CurrencyUtil.validateCurrencyCode(baseCurrencyCode);
         CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
 
-        try {
-            Optional<ExchangeRateEntity> optionalRate = exchangeRateDao.find(currencyPair);
-            return optionalRate.map(mapper::toDto);
-        } catch (DaoException e) {
-            throw new ExchangeRateServiceException(e.getMessage(), e);
-        }
+        Optional<ExchangeRateEntity> exchangeRate = exchangeRateDao.find(currencyPair);
+        return exchangeRate.map(mapper::toDto);
     }
 
     public ExchangeRateResponseDto save(ExchangeRateRequestDto requestDto) {
@@ -82,10 +78,10 @@ public class ExchangeRateService {
         validateExchangeRate(exchangeRate);
 
         CurrencyEntity baseCurrency = currencyDao.find(baseCurrencyCode)
-                .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
+                .orElseThrow(() -> new NotFoundException(NO_BASE_CURRENCY + ": " + baseCurrencyCode));
 
         CurrencyEntity targetCurrency = currencyDao.find(targetCurrencyCode)
-                .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
+                .orElseThrow(() -> new NotFoundException(NO_TARGET_CURRENCY + ": " + targetCurrencyCode));
 
         ExchangeRateEntity rate = new ExchangeRateEntity(baseCurrency, targetCurrency, exchangeRate);
         ExchangeRateEntity savedRate = exchangeRateDao.save(rate);
