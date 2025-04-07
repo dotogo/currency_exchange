@@ -13,7 +13,6 @@ import java.util.*;
 public class CurrencyService {
 
     private static final String ERROR_FINDING_BY_CODE = ">>> Something went wrong while finding for currency by code :( <<<";
-    private static final String ERROR_FINDING_ALL_CURRENCIES = ">>> Something went wrong while finding all currencies :( <<<";
     private static final String VALID_CURRENCY_NAME = "Invalid currency name. The only correct name for this code is: ";
     private static final String VALID_CURRENCY_SIGN = "Invalid currency name. The only correct sign for this code is: ";
 
@@ -30,38 +29,28 @@ public class CurrencyService {
     }
 
     public List<CurrencyResponseDto> findAll() {
-        try {
-            List<CurrencyEntity> entities = currencyDao.findAll();
+        List<CurrencyEntity> entities = currencyDao.findAll();
 
-            List<CurrencyResponseDto> dtos = new ArrayList<>();
-            for (CurrencyEntity entity : entities) {
-                dtos.add(mapper.toDto(entity));
-            }
-            return dtos;
-        } catch (DaoException e) {
-            throw new CurrencyServiceException(ERROR_FINDING_ALL_CURRENCIES, e);
+        List<CurrencyResponseDto> dtos = new ArrayList<>();
+        for (CurrencyEntity entity : entities) {
+            dtos.add(mapper.toDto(entity));
         }
+        return dtos;
     }
 
     public Optional<CurrencyResponseDto> findByCode(String code) {
         code = CurrencyUtil.normalizeCurrencyCode(code);
         CurrencyUtil.validateCurrencyCode(code);
 
-        Optional<CurrencyEntity> optionalCurrency;
+        Optional<CurrencyEntity> currency = currencyDao.find(code);
 
-        try {
-            optionalCurrency = currencyDao.find(code);
-
-            Optional<CurrencyResponseDto> dto = Optional.empty();
-            if (optionalCurrency.isPresent()) {
-                CurrencyEntity entity = optionalCurrency.get();
-                CurrencyResponseDto responseDto = mapper.toDto(entity);
-                dto = Optional.of(responseDto);
-            }
-            return dto;
-        } catch (Exception e) {
-            throw new CurrencyServiceException(ERROR_FINDING_BY_CODE, e);
+        Optional<CurrencyResponseDto> response = Optional.empty();
+        if (currency.isPresent()) {
+            CurrencyEntity entity = currency.get();
+            CurrencyResponseDto responseDto = mapper.toDto(entity);
+            response = Optional.of(responseDto);
         }
+        return response;
     }
 
     public CurrencyResponseDto save(CurrencyRequestDto currencyRequestDto) {

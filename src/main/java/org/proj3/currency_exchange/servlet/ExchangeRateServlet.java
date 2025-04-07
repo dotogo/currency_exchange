@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
+import org.proj3.currency_exchange.exception.DaoException;
 import org.proj3.currency_exchange.exception.ExchangeRateServiceException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.ExchangeRateService;
@@ -131,9 +132,10 @@ public class ExchangeRateServlet extends BaseServlet {
                 sendErrorResponse(resp, HttpServletResponse.SC_NOT_FOUND, CURRENCY_PAIR_IS_ABSENT);
             }
         } catch (NumberFormatException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INVALID_EXCHANGE_RATE);
-        } catch (IllegalCurrencyCodeException | ExchangeRateServiceException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_EXCHANGE_RATE);
+
+        } catch (DaoException | IllegalCurrencyCodeException | IllegalArgumentException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }
     }
 

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.CurrencyResponseDto;
 import org.proj3.currency_exchange.exception.CurrencyServiceException;
+import org.proj3.currency_exchange.exception.DaoException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
 import org.proj3.currency_exchange.service.CurrencyService;
 import org.proj3.currency_exchange.util.JsonUtil;
@@ -30,9 +31,9 @@ public class CurrencyServlet extends BaseServlet {
         }
 
         try {
-            Optional<CurrencyResponseDto> dtoOptional = currencyService.findByCode(unverifiedCurrencyCode);
-            if (dtoOptional.isPresent()) {
-                CurrencyResponseDto responseDto = dtoOptional.get();
+            Optional<CurrencyResponseDto> response = currencyService.findByCode(unverifiedCurrencyCode);
+            if (response.isPresent()) {
+                CurrencyResponseDto responseDto = response.get();
                 String json = JsonUtil.toJson(responseDto);
 
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -42,7 +43,7 @@ public class CurrencyServlet extends BaseServlet {
             }
         } catch (IllegalCurrencyCodeException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-        } catch (CurrencyServiceException e) {
+        } catch (DaoException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }

@@ -96,31 +96,26 @@ public class ExchangeRateService {
     public Optional<ExchangeRateResponseDto> update(String currencyPair, BigDecimal exchangeRate) {
         currencyPair = CurrencyUtil.normalizeCurrencyCode(currencyPair);
 
-        try {
-            validatePairCodeLength(currencyPair);
-            validateExchangeRate(exchangeRate);
+        validatePairCodeLength(currencyPair);
+        validateExchangeRate(exchangeRate);
 
-            String baseCurrencyCode = currencyPair.substring(0, 3);
-            String targetCurrencyCode = currencyPair.substring(3);
+        String baseCurrencyCode = currencyPair.substring(0, 3);
+        String targetCurrencyCode = currencyPair.substring(3);
 
-            CurrencyUtil.validateCurrencyCode(baseCurrencyCode);
-            CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
+        CurrencyUtil.validateCurrencyCode(baseCurrencyCode);
+        CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
 
-            CurrencyEntity baseCurrency = currencyDao.find(baseCurrencyCode)
-                    .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
+        CurrencyEntity baseCurrency = currencyDao.find(baseCurrencyCode)
+                .orElseThrow(() -> new ExchangeRateServiceException(NO_BASE_CURRENCY));
 
-            CurrencyEntity targetCurrency = currencyDao.find(targetCurrencyCode)
-                    .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
+        CurrencyEntity targetCurrency = currencyDao.find(targetCurrencyCode)
+                .orElseThrow(() -> new ExchangeRateServiceException(NO_TARGET_CURRENCY));
 
-            int baseCurrencyId = baseCurrency.getId();
-            int targetCurrencyId = targetCurrency.getId();
+        int baseCurrencyId = baseCurrency.getId();
+        int targetCurrencyId = targetCurrency.getId();
 
-            ExchangeRateEntity updatedRate = exchangeRateDao.update(baseCurrencyId, targetCurrencyId, exchangeRate);
-            return Optional.of(mapper.toDto(updatedRate));
-
-        } catch (DaoException | IllegalCurrencyCodeException | IllegalArgumentException e) {
-            throw new ExchangeRateServiceException(e.getMessage(), e);
-        }
+        ExchangeRateEntity updatedRate = exchangeRateDao.update(baseCurrencyId, targetCurrencyId, exchangeRate);
+        return Optional.of(mapper.toDto(updatedRate));
     }
 
     private void validateExchangeRate(BigDecimal rate) {

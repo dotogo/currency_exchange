@@ -40,7 +40,7 @@ public class CurrenciesServlet extends BaseServlet {
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(json);
-        } catch (CurrencyServiceException e) {
+        } catch (DaoException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }

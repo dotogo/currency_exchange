@@ -56,8 +56,8 @@ public class ExchangeRateDao extends AbstractDao<ExchangeRateEntity, String> {
     private static final String NO_EXCHANGE_RATE = "There is no exchange rate for the currency pair.";
     private static final String GENERATED_ID_RETRIEVING_ERROR = "Failed to retrieve generated ID.";
     private static final String SAVING_ERROR = "Error saving exchange rate.";
-    private static final String UPDATE_ERROR_STATEMENT = "Failed to update exchange rate. PreparedStatement.";
-    private static final String UPDATE_ERROR = "Failed to update exchange rate";
+    private static final String UPDATE_ERROR_STATEMENT = "Failed to update exchange rate. No rows in the database are affected.";
+    private static final String UPDATE_ERROR = "Failed to update exchange rate. Database error";
 
     private ExchangeRateDao(DataSource dataSource) {
         super(dataSource);
