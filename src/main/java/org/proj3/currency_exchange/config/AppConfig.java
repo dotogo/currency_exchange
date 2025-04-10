@@ -21,10 +21,12 @@ public class AppConfig {
 
     private static final CurrencyService CURRENCY_SERVICE =
             CurrencyService.createInstance(CURRENCY_DAO,CURRENCY_MAPPER);
+
     private static final ExchangeRateService EXCHANGE_RATE_SERVICE =
             ExchangeRateService.createInstance(EXCHANGE_RATE_DAO, CURRENCY_DAO, EXCHANGE_RATE_MAPPER);
+
     private static final ExchangeService EXCHANGE_SERVICE =
-            ExchangeService.createInstance(EXCHANGE_RATE_SERVICE);
+            ExchangeService.createInstance(EXCHANGE_RATE_DAO, CURRENCY_MAPPER);
 
     public static CurrencyService getCurrencyService() {
         return CURRENCY_SERVICE;

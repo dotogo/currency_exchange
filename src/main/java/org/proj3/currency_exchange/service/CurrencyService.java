@@ -12,7 +12,6 @@ import java.util.*;
 
 public class CurrencyService {
 
-    private static final String ERROR_FINDING_BY_CODE = ">>> Something went wrong while finding for currency by code :( <<<";
     private static final String VALID_CURRENCY_NAME = "Invalid currency name. The only correct name for this code is: ";
     private static final String VALID_CURRENCY_SIGN = "Invalid currency name. The only correct sign for this code is: ";
 
@@ -48,7 +47,7 @@ public class CurrencyService {
         if (currency.isPresent()) {
             CurrencyEntity entity = currency.get();
             CurrencyResponseDto responseDto = mapper.toDto(entity);
-            response = Optional.of(responseDto);
+            return Optional.of(responseDto);
         }
         return response;
     }

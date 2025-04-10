@@ -1,6 +1,5 @@
 package org.proj3.currency_exchange.servlet;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +29,6 @@ public class ExchangeRateServlet extends BaseServlet {
     private static final String EMPTY_RATE = "Rate cannot be empty.";
     private static final String INVALID_EXCHANGE_RATE = "Invalid exchange rate. " +
                                                         "Please enter a positive decimal number with no more than 6 decimal places.";
-    private static final String CURRENCY_PAIR_IS_ABSENT = "The currency pair is absent in the database.";
     private static final String INVALID_CONTENT_TYPE = "Invalid Content-Type. Expected \"application/x-www-form-urlencoded\".";
     private static final String ERROR_READING_REQUEST_BODY = "Error reading request body";
     private static final String RATE = "rate";

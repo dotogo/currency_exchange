@@ -1,20 +1,19 @@
 package org.proj3.currency_exchange.servlet;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.config.AppConfig;
-import org.proj3.currency_exchange.dto.CurrencyResponseDto;
-import org.proj3.currency_exchange.dto.ExchangeDto;
-import org.proj3.currency_exchange.exception.ExchangeServiceException;
+import org.proj3.currency_exchange.dto.ExchangeRequestDto;
+import org.proj3.currency_exchange.dto.ExchangeResponseDto;
+import org.proj3.currency_exchange.exception.DaoException;
 import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
-import org.proj3.currency_exchange.service.CurrencyService;
+import org.proj3.currency_exchange.exception.IllegalPararmeterException;
 import org.proj3.currency_exchange.service.ExchangeService;
+import org.proj3.currency_exchange.util.ExchangeUtil;
 import org.proj3.currency_exchange.util.JsonUtil;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.*;
 
 @WebServlet("/exchange")
@@ -30,16 +29,6 @@ public class ExchangeServlet extends BaseServlet {
     private static final String TO_FIELD_EMPTY = "The \"%s\" field is empty. Please provide the target currency code.".formatted(PARAMETER_TO);
     private static final String AMOUNT_FIELD_EMPTY = "The \"%s\" field is empty. Please specify the amount.".formatted(PARAMETER_AMOUNT);
 
-    private static final String USE_DIFFERENT_CURRENCIES = "Use different currencies for conversion.";
-    private static final String NO_CURRENCY_IN_DATABASE = "Currency with code \"%s\" is not in the database. Please add currency before conversion.";
-    private static final String NO_EXCHANGE_RATES_IN_DATABASE = "Currency exchange is not available. " +
-                                                                "There is no direct, reverse or cross exchange rate (via USD) in the database.";
-
-    private static final String JSON_ERROR = "Error processing JSON. ";
-    private static final String IO_ERROR = "Input/output data error. ";
-
-
-    private final CurrencyService currencyService = AppConfig.getCurrencyService();
     private final ExchangeService exchangeService = AppConfig.getExchangeService();
 
     @Override
@@ -60,45 +49,19 @@ public class ExchangeServlet extends BaseServlet {
             String to = paramsToCheck.get(1).value();
             String amount = paramsToCheck.get(2).value();
 
-            if (from.equals(to)) {
-                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, USE_DIFFERENT_CURRENCIES);
-                return;
-            }
+            ExchangeRequestDto requestDto = new ExchangeRequestDto(from, to, ExchangeUtil.convertToNumber(amount));
 
-            Optional<CurrencyResponseDto> baseDto = currencyService.findByCode(from);
-            if (baseDto.isEmpty()) {
-                sendErrorCurrencyIsMissing(resp, from);
-                return;
-            }
+            ExchangeResponseDto responseDto = exchangeService.exchange(requestDto);
 
-            Optional<CurrencyResponseDto> targetDto = currencyService.findByCode(to);
-            if (targetDto.isEmpty()) {
-                sendErrorCurrencyIsMissing(resp, to);
-                return;
-            }
+            String json = JsonUtil.toJson(responseDto);
 
-            BigDecimal validatedAmount = exchangeService.validateAmount(amount);
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(json);
 
-            CurrencyResponseDto base = baseDto.get();
-            CurrencyResponseDto target = targetDto.get();
-
-            Optional<BigDecimal> rate = exchangeService.getDirectRate(from, to)
-                                        .or(() -> exchangeService.getReverseRate(from, to)
-                                        .or(() -> exchangeService.getCrossRate(from, to)));
-
-            if (rate.isPresent()) {
-                ExchangeDto exchangeDto = createDtoForOkResponse(validatedAmount, base, target, rate.get());
-                sendOkResponse(resp, exchangeDto);
-            } else {
-                sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, NO_EXCHANGE_RATES_IN_DATABASE);
-            }
-
-        } catch (IllegalCurrencyCodeException | ExchangeServiceException e) {
+        } catch (IllegalCurrencyCodeException | IllegalArgumentException | IllegalPararmeterException e) {
+            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (DaoException e) {
             sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-        } catch (JsonProcessingException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, JSON_ERROR + e.getMessage());
-        } catch (IOException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, IO_ERROR + e.getMessage());
         }
     }
 
@@ -112,6 +75,11 @@ public class ExchangeServlet extends BaseServlet {
         return false;
     }
 
+    private boolean isParameterNamesInvalid(Map<String, String[]> parameterMap, Set<String> validNames) {
+        Set<String> parameterNames = parameterMap.keySet();
+        return !parameterNames.containsAll(validNames);
+    }
+
     private boolean sendErrorIfParameterEmpty(List<ParameterCheck> parametersToCheck, HttpServletResponse resp) throws IOException {
         for (ParameterCheck parameter : parametersToCheck) {
             if (parameter.isEmpty()) {
@@ -120,32 +88,6 @@ public class ExchangeServlet extends BaseServlet {
             }
         }
         return false;
-    }
-
-    private void sendErrorCurrencyIsMissing(HttpServletResponse resp, String currencyCode) throws IOException {
-        sendErrorResponse(resp,
-                HttpServletResponse.SC_BAD_REQUEST,
-                NO_CURRENCY_IN_DATABASE.formatted(currencyCode.toUpperCase()));
-    }
-
-    private void sendOkResponse(HttpServletResponse resp, ExchangeDto exchangeDto) throws IOException {
-        String json = JsonUtil.toJson(exchangeDto);
-
-        resp.setStatus(HttpServletResponse.SC_OK);
-        resp.getWriter().write(json);
-    }
-
-    private ExchangeDto createDtoForOkResponse(BigDecimal validatedAmount, CurrencyResponseDto base,
-                                          CurrencyResponseDto target, BigDecimal rate) {
-
-        BigDecimal convertedAmount = exchangeService.calculateConvertedAmount(rate, validatedAmount);
-        return new ExchangeDto(
-                base, target, rate, validatedAmount, convertedAmount);
-    }
-
-    private boolean isParameterNamesInvalid(Map<String, String[]> parameterMap, Set<String> validNames) {
-        Set<String> parameterNames = parameterMap.keySet();
-        return !parameterNames.containsAll(validNames);
     }
 
     private List<ParameterCheck> getParametersToCheck(Map<String, String[]> parameterMap) {
