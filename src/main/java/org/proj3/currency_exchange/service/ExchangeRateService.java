@@ -27,6 +27,8 @@ public class ExchangeRateService {
     private static final String RATE_ERROR_MESSAGE = "Please enter a valid rate: a number greater than 0," +
                                                      " less than a million, no more than 6 decimal places.";
 
+    private static final String USE_DIFFERENT_CURRENCIES = "Use different currencies to create a new exchange rate.";
+
     private static final int MAX_RATE_INTEGER_DIGITS = 6;
     private static final int MAX_RATE_FRACTIONAL_DIGITS = 6;
 
@@ -68,13 +70,17 @@ public class ExchangeRateService {
     }
 
     public ExchangeRateResponseDto save(ExchangeRateRequestDto requestDto) {
-        BigDecimal exchangeRate = requestDto.getRate();
-
         String baseCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getBaseCurrencyCode());
-        String targetCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getTargetCurrencyCode());
-
         CurrencyUtil.validateCurrencyCode(baseCurrencyCode);
+
+        String targetCurrencyCode = CurrencyUtil.normalizeCurrencyCode(requestDto.getTargetCurrencyCode());
         CurrencyUtil.validateCurrencyCode(targetCurrencyCode);
+
+        if (baseCurrencyCode.equals(targetCurrencyCode)) {
+            throw new IllegalPararmeterException(USE_DIFFERENT_CURRENCIES);
+        }
+
+        BigDecimal exchangeRate = requestDto.getRate();
         validateExchangeRate(exchangeRate);
 
         CurrencyEntity baseCurrency = currencyDao.find(baseCurrencyCode)
