@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.ExchangeRateRequestDto;
 import org.proj3.currency_exchange.dto.ExchangeRateResponseDto;
-import org.proj3.currency_exchange.exception.*;
 import org.proj3.currency_exchange.service.ExchangeRateService;
 import org.proj3.currency_exchange.util.JsonUtil;
 
@@ -30,15 +29,11 @@ public class ExchangeRatesServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        try {
-            List<ExchangeRateResponseDto> exchangeRates = exchangeRateService.findAll();
-            String json = JsonUtil.toJson(exchangeRates);
+        List<ExchangeRateResponseDto> exchangeRates = exchangeRateService.findAll();
+        String json = JsonUtil.toJson(exchangeRates);
 
-            resp.setStatus(HttpServletResponse.SC_OK);
-            resp.getWriter().write(json);
-        } catch (DaoException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.getWriter().write(json);
     }
 
     @Override
@@ -56,24 +51,13 @@ public class ExchangeRatesServlet extends BaseServlet {
                         .trim()
                         .replaceAll(",", "."));
 
-        try {
-            ExchangeRateRequestDto requestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
+        ExchangeRateRequestDto requestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
 
-            ExchangeRateResponseDto rateResponseDto = exchangeRateService.save(requestDto);
-            String json = JsonUtil.toJson(rateResponseDto);
+        ExchangeRateResponseDto rateResponseDto = exchangeRateService.save(requestDto);
+        String json = JsonUtil.toJson(rateResponseDto);
 
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            resp.getWriter().write(json);
-
-        } catch (IllegalCurrencyCodeException | IllegalArgumentException | NotFoundException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-
-        } catch (EntityExistsException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_CONFLICT, e.getMessage());
-
-        } catch (DaoException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+        resp.setStatus(HttpServletResponse.SC_CREATED);
+        resp.getWriter().write(json);
     }
 
     private boolean validateAndSendErrorWhenParameterNamesInvalid(HttpServletRequest req, HttpServletResponse resp) throws IOException {

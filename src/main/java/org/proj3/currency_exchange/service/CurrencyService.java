@@ -13,7 +13,7 @@ import java.util.*;
 public class CurrencyService {
 
     private static final String VALID_CURRENCY_NAME = "Invalid currency name. The only correct name for this code is: ";
-    private static final String VALID_CURRENCY_SIGN = "Invalid currency name. The only correct sign for this code is: ";
+    private static final String VALID_CURRENCY_SIGN = "Invalid currency sign. The only correct sign for this code is: ";
 
     private final CurrencyDao currencyDao;
     private final CurrencyMapper mapper;

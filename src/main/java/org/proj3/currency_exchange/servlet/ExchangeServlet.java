@@ -6,9 +6,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.proj3.currency_exchange.config.AppConfig;
 import org.proj3.currency_exchange.dto.ExchangeRequestDto;
 import org.proj3.currency_exchange.dto.ExchangeResponseDto;
-import org.proj3.currency_exchange.exception.DaoException;
-import org.proj3.currency_exchange.exception.IllegalCurrencyCodeException;
-import org.proj3.currency_exchange.exception.IllegalPararmeterException;
 import org.proj3.currency_exchange.service.ExchangeService;
 import org.proj3.currency_exchange.util.ExchangeUtil;
 import org.proj3.currency_exchange.util.JsonUtil;
@@ -35,34 +32,27 @@ public class ExchangeServlet extends BaseServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Map<String, String[]> parameterMap = req.getParameterMap();
 
-        try {
-            if (sendErrorIfParameterNameInvalid(parameterMap, resp)) {
-                return;
-            }
-
-            List<ParameterCheck> paramsToCheck = getParametersToCheck(parameterMap);
-            if (sendErrorIfParameterEmpty(paramsToCheck, resp)) {
-                return;
-            }
-
-            String from = paramsToCheck.get(0).value();
-            String to = paramsToCheck.get(1).value();
-            String amount = paramsToCheck.get(2).value();
-
-            ExchangeRequestDto requestDto = new ExchangeRequestDto(from, to, ExchangeUtil.convertToNumber(amount));
-
-            ExchangeResponseDto responseDto = exchangeService.exchange(requestDto);
-
-            String json = JsonUtil.toJson(responseDto);
-
-            resp.setStatus(HttpServletResponse.SC_OK);
-            resp.getWriter().write(json);
-
-        } catch (IllegalCurrencyCodeException | IllegalArgumentException | IllegalPararmeterException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-        } catch (DaoException e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        if (sendErrorIfParameterNameInvalid(parameterMap, resp)) {
+            return;
         }
+
+        List<ParameterCheck> paramsToCheck = getParametersToCheck(parameterMap);
+        if (sendErrorIfParameterEmpty(paramsToCheck, resp)) {
+            return;
+        }
+
+        String from = paramsToCheck.get(0).value();
+        String to = paramsToCheck.get(1).value();
+        String amount = paramsToCheck.get(2).value();
+
+        ExchangeRequestDto requestDto = new ExchangeRequestDto(from, to, ExchangeUtil.convertToNumber(amount));
+
+        ExchangeResponseDto responseDto = exchangeService.exchange(requestDto);
+
+        String json = JsonUtil.toJson(responseDto);
+
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.getWriter().write(json);
     }
 
     private boolean sendErrorIfParameterNameInvalid(Map<String, String[]> parameterMap, HttpServletResponse resp) throws IOException {
