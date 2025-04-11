@@ -1,7 +1,5 @@
 package org.proj3.currency_exchange.dto;
 
-import org.proj3.currency_exchange.entity.CurrencyEntity;
-
 import java.math.BigDecimal;
 
 public class ExchangeRateResponseDto {
